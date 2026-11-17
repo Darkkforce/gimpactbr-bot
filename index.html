@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Velocidade e simulação — HSR</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{--bg:var(--tg-theme-bg-color,#fff);--fg:var(--tg-theme-text-color,#1c1c1e);--hint:var(--tg-theme-hint-color,#6b7280);--card:var(--tg-theme-secondary-bg-color,#f3f4f6);--btn:var(--tg-theme-button-color,#2563eb);--btnfg:var(--tg-theme-button-text-color,#fff);--line:color-mix(in srgb,var(--hint) 28%,transparent)}
+@media(prefers-color-scheme:dark){:root{--bg:var(--tg-theme-bg-color,#17181c);--fg:var(--tg-theme-text-color,#f3f4f6);--hint:var(--tg-theme-hint-color,#9ca3af);--card:var(--tg-theme-secondary-bg-color,#23252b)}}
+*{box-sizing:border-box}
+body{margin:0;padding:8px 8px calc(12px + env(safe-area-inset-bottom,0px));background:var(--bg);color:var(--fg);font:14px/1.35 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+h1{font-size:16px;margin:0 0 6px}h2{font-size:14px;margin:10px 0 4px}
+.card{background:var(--card);border-radius:10px;padding:8px 10px;margin-bottom:8px}
+label{display:block;font-size:11px;color:var(--hint);margin:6px 0 2px}
+input,select,button{font:inherit}
+input,select{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--fg);min-width:0}
+.row{display:flex;gap:6px}.row>div{flex:1;min-width:0}
+.chips{display:flex;gap:5px;overflow-x:auto;margin-top:5px;padding-bottom:2px}
+.chips button{flex:none;padding:3px 9px;border:0;border-radius:999px;background:var(--btn);color:var(--btnfg);font-size:12px}
+.big{font-size:17px;font-weight:700}.hint{color:var(--hint);font-size:12px}.err{color:#dc2626;font-weight:600}
+.warn{background:color-mix(in srgb,#f59e0b 18%,transparent);border-radius:7px;padding:6px 8px;margin-top:6px;font-size:12px}
+.bp{display:grid;grid-template-columns:1fr 1fr;gap:1px 12px;margin-top:4px;font-size:13px}.bp div{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:2px 0}.bp .cur{font-weight:700;color:var(--btn)}
+.cols{display:grid;grid-template-columns:3fr 2fr;gap:8px}@media(max-width:360px){.cols{grid-template-columns:1fr}}
+.u{display:flex;gap:4px;margin-bottom:4px}.u input[type=number]{width:62px;flex:none}.u .me{flex:1;padding:6px 8px;color:var(--hint)}
+.u.ext{flex-wrap:wrap;margin-bottom:6px}.u.ext input:first-child{width:auto;flex:1 1 calc(100% - 66px)}.u.ext input.x{width:auto;flex:1 1 100%;font-size:12px;padding:4px 6px}
+.rl{display:grid;grid-template-columns:1fr 1fr 28px;gap:4px;margin-top:5px}.rl .rm{grid-column:3;grid-row:1/3;border:0;border-radius:6px;background:var(--hint);color:var(--btnfg);font-size:16px;line-height:1;cursor:pointer}.rl select,.rl input{font-size:12px;padding:4px 6px}
+.pl{border:0;border-radius:6px;background:var(--btn);color:var(--btnfg);padding:0 7px;font-size:13px;line-height:18px;margin-left:4px;cursor:pointer}
+tr.mk td{font-size:11px;color:var(--hint);padding:0 6px 2px 16px;white-space:normal}tr.ed td{padding:3px 6px;white-space:normal}
+.wrap{overflow-x:auto;margin-top:6px}table{width:100%;border-collapse:collapse;font-size:13px}td,th{text-align:left;padding:2px 6px;white-space:nowrap}
+th{color:var(--hint);font-weight:500}tr.cy td{background:var(--line);font-size:11px;color:var(--hint);padding:1px 6px}tr.me td{font-weight:700;color:var(--btn)}tr.en td:nth-child(2){color:#dc2626}
+button.add{margin-top:2px;padding:5px 9px;border:0;border-radius:7px;background:var(--btn);color:var(--btnfg)}
+.vg{display:inline-flex;align-items:center;gap:8px;margin:0 0 8px;padding:6px 16px 6px 12px;border-radius:999px;background:#0f2a5f;border:1px solid #3d6fd6;color:#fff;font-weight:500;text-decoration:none;box-shadow:0 0 8px rgba(61,111,214,.45)}.vg svg{width:16px;height:16px;filter:drop-shadow(0 0 3px #fff)}
+.pt{color:var(--hint);font-size:11px;font-weight:400;margin-left:4px}
+/* cores dos aliados: a0 verde, a1 laranja, a2 roxo (você = azul, inimigos = vermelho) */
+.u.a0 input:first-child{border-left:3px solid #16a34a}.u.a1 input:first-child{border-left:3px solid #d97706}.u.a2 input:first-child{border-left:3px solid #9333ea}
+tr.a0 td:nth-child(2){color:#16a34a;font-weight:600}tr.a1 td:nth-child(2){color:#d97706;font-weight:600}tr.a2 td:nth-child(2){color:#9333ea;font-weight:600}
+</style>
+</head>
+<body>
+<a class="vg" id="vg" href="https://t.me/StarRailBR" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="M12 1l2.4 8.6L23 12l-8.6 2.4L12 23l-2.4-8.6L1 12l8.6-2.4z"/></svg>Vanguarda do Presságio</a>
+<h1>🏃 Velocidade e breakpoints — HSR</h1>
+
+<div class="card">
+  <div class="row">
+    <div><label for="modo">Modo</label><select id="modo"><option value="moc">Memory of Chaos</option><option value="pf">Pure Fiction</option><option value="aa">Anomaly Arbitration</option><option value="as">Apocalyptic Shadow</option></select></div>
+    <div><label for="spd">SPD</label><input id="spd" type="number" inputmode="decimal" min="1" step="any" value="160"></div>
+    <div><label for="ciclos" id="clab">Ciclos</label><input id="ciclos" type="number" inputmode="numeric" min="0" placeholder="1º"></div>
+  </div>
+  <label for="ini">Avanço no início da luta (Vonwacq, God's Moment of Joy, avanço próprio do personagem)</label>
+  <input id="ini" type="text" placeholder="vonwacq  ou  gmoj  ou  40  ou  vonwacq+20" autocapitalize="off" autocomplete="off">
+  <div class="chips" id="chipsIni"></div>
+  <label>Avanços durante a luta — quando alguém agir, avança alguém</label>
+  <div id="rules"></div>
+  <div class="hint" style="margin-top:3px">Os atalhos entram no último campo “valor” tocado; valores se somam (eagle+ddd5). Para escolher o momento: use “No AV…” no primeiro seletor, ou toque em ＋ numa ação da simulação.</div>
+  <div class="chips" id="chips"></div>
+  <div id="warn"></div>
+</div>
+
+<div class="card" id="res"></div>
+
+<h2>⚔️ Simulação de turnos (ordem por AV)</h2>
+<div class="card">
+  <div class="cols">
+    <div><label>Aliados — você é o primeiro (nome, SPD e avanço de início)</label><div class="u"><div class="me" id="meRow"></div></div><div id="al"></div></div>
+    <div><label>Inimigos (nome e SPD)</label><div id="in"></div>
+      <div id="dbrow" hidden><select id="dbsel"></select><button class="add" id="dbadd" type="button">+ adicionar</button></div></div>
+  </div>
+  <div class="wrap" id="sim"></div>
+</div>
+
+<script>
+const tg = window.Telegram && Telegram.WebApp;
+if (tg) { tg.ready(); tg.expand(); }
+
+// ---- mesmas regras do /vel do bot (miscCommands.js) ----
+const MODES = {
+  moc: { label: "Memory of Chaos", first: 150, ideal: 5, idealLabel: "5 ciclos — ideal por time" },
+  pf:  { label: "Pure Fiction", first: 150, ideal: 4, idealLabel: "4 ciclos — todo o AV de Pure Fiction" },
+  aa:  { label: "Anomaly Arbitration", first: 300, ideal: 3, idealLabel: "3 ciclos — o ideal é fechar em até 2 ciclos além do 0" },
+  // Apocalyptic Shadow não usa ciclos: conta o AV que você leva pra matar o boss. O campo "ciclos" vira "AV limite" (você informa).
+  as:  { label: "Apocalyptic Shadow", first: 0, ideal: null, idealLabel: "" },
+};
+const AS_SIM_AV = 300; // só o alcance da simulação quando nenhum AV limite foi informado (não é um número oficial)
+const PRE = { vonwacq: 40, eagle: 25, ddd1: 16, ddd2: 18, ddd3: 20, ddd4: 22, ddd5: 24 };
+const START = { vonwacq: 40, gmoj: 40 }; // avanços de início de luta (gmoj = God's Moment of Joy)
+const RE = /^(\d+)?(vonwacq|eagle|ddd[1-5])$/i, MAXF = 100;
+const atom = (p) => { const m = p.match(/^(vonwacq|eagle|ddd[1-5])$/i); if (m) return PRE[m[1].toLowerCase()]; const n = Number(p); return isNaN(n) ? null : n; };
+function tok(t) {
+  if (t.includes("+")) return [t.split("+").reduce((a, p) => a + (atom(p) ?? 0), 0)];
+  const m = t.match(RE);
+  if (m) return Array(m[1] ? Math.min(parseInt(m[1], 10), MAXF + 1) : 1).fill(PRE[m[2].toLowerCase()]);
+  const n = Number(t); return isNaN(n) ? [] : [n];
+}
+const vonCount = (ts) => ts.reduce((a, t) => a + t.split("+").reduce((b, p) => { const m = p.match(RE); return b + (m && m[2].toLowerCase() === "vonwacq" ? (m[1] ? parseInt(m[1], 10) : 1) : 0); }, 0), 0);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const $ = (id) => document.getElementById(id);
+
+function compute() {
+  const M = MODES[$("modo").value], spd = Number($("spd").value);
+  const isAS = $("modo").value === "as";
+  const hasC = $("ciclos").value.trim() !== "", cIn = hasC ? Number($("ciclos").value) : 1;
+  const RL = readRules(); if (RL.err) return { err: RL.err }; const toks = [];
+  if (vonCount(toks) > 0) return { err: "Vonwacq é avanço de início de luta: use o campo “Avanço no início da luta”." };
+  const itoks = $("ini").value.trim().split(/[\s+]+/).filter(Boolean);
+  if (itoks.filter((t) => /^vonwacq$/i.test(t)).length > 1) return { err: "Vonwacq só pode estar equipado em 1 personagem." };
+  let S = 0;
+  for (const t of itoks) { const n = START[t.toLowerCase()] ?? Number(t); if (!Number.isFinite(n) || n < 0) return { err: `Avanço de início inválido: ${t}` }; S += n; }
+  S = Math.min(S, 100); // não dá pra agir antes de 0 AV
+  if (toks.length > 50) return { err: "Argumentos demais." };
+  const fw = RL.selfFw;
+  if (fw.length > MAXF) return { err: `Avanços demais (máx. ${MAXF}).` };
+  if (!Number.isFinite(spd) || spd <= 0 || !Number.isFinite(cIn) || cIn < 0) return { err: "Valores inválidos." };
+  const hasAV = isAS && hasC && cIn > 0;
+  const ciclos = cIn <= 1 ? 1 : Math.floor(cIn), base = isAS ? (hasAV ? cIn : AS_SIM_AV) : M.first + 100 * (ciclos - 1);
+  const pre = [0]; fw.forEach((f) => pre.push(pre[pre.length - 1] + f));
+  const sumF = (k) => pre[Math.min(k, pre.length - 1)];
+  const dist = (n) => Math.max(0, n * 10000 - 100 * (S + sumF(n - 1))); // início reduz só a 1ª ação; os avanços seguintes acumulam
+  const need = (n, b = base) => Math.max(1, Math.ceil(dist(n) / b));
+  let acts = 0; for (let n = 1; n <= 50; n++) { if (spd >= need(n)) acts = n; else break; }
+  let ideal = null;
+  if (!hasC && !isAS) { const ib = M.first + 100 * (M.ideal - 1); let a = 0; for (let n = 1; n <= 80; n++) { if (spd >= need(n, ib)) a = n; else break; } ideal = a; }
+  return { M, spd, ciclos, cIn, base, fw, sumF, S, RL, von: itoks.filter((t) => /^vonwacq$/i.test(t)).length, dist, need, acts, ideal, isAS, hasAV };
+}
+
+// unidades: linhas com nome + SPD (linha sem SPD é ignorada)
+function mkRows(id, n, pre, defs, ext) {
+  const box = $(id);
+  for (let i = 0; i < n; i++) {
+    const d = document.createElement("div"); d.className = ext ? "u ext a" + i : "u";
+    const a = defs[i] || ["", ""];
+    d.innerHTML = `<input placeholder="${pre} ${i + 1}" value="${a[0]}" maxlength="20" autocomplete="off"><input type="number" inputmode="decimal" min="1" step="any" placeholder="SPD" value="${a[1]}">${ext ? '<input class="x" placeholder="avanço de início (vonwacq, gmoj, 40)" title="avanço no início da luta (vonwacq, gmoj, 40)" autocapitalize="off" autocomplete="off">' : ""}`;
+    box.appendChild(d);
+  }
+  box.addEventListener("input", render);
+}
+// avanços de um aliado: mesmas regras do campo principal
+function advOf(ini, av) {
+  const it = ini.trim().split(/[\s+]+/).filter(Boolean), at = av.trim().split(/\s+/).filter(Boolean);
+  if (vonCount(at) > 0) return { err: "Vonwacq vai no campo “início”." };
+  let S = 0;
+  for (const t of it) { const n = START[t.toLowerCase()] ?? Number(t); if (!Number.isFinite(n) || n < 0) return { err: `avanço de início inválido: ${t}` }; S += n; }
+  const fw = at.flatMap(tok).slice(0, MAXF), pre = [0]; fw.forEach((f) => pre.push(pre[pre.length - 1] + f));
+  return { S: Math.min(S, 100), sumF: (k) => pre[Math.min(k, pre.length - 1)], von: it.filter((t) => /^vonwacq$/i.test(t)).length };
+}
+const readRows = (id, pre) => [...$(id).querySelectorAll(".u")].map((d, i) => {
+  const [a, b, c, e] = d.querySelectorAll("input"), s = Number(String(b.value).replace(",", "."));
+  return s > 0 ? { name: a.value.trim() || `${pre} ${i + 1}`, spd: s, i, adv: c ? advOf(c.value, "") : null } : null;
+}).filter(Boolean);
+
+function render() {
+  refreshSel();
+  const r = compute();
+  if (r.err) { $("res").innerHTML = `<span class="err">❌ ${esc(r.err)}</span>`; $("sim").innerHTML = ""; $("warn").innerHTML = ""; return; }
+  $("meRow").textContent = `Você — ${r.spd} SPD`;
+  $("warn").innerHTML = r.RL.other ? `<div class="warn">ℹ️ Avanços que envolvem outras unidades, ou disparados por AV, só entram na simulação; as ações garantidas consideram apenas os avanços de Você em Você.</div>` : "";
+  const semAV = r.isAS && !r.hasAV; // Apocalyptic Shadow sem AV limite: só mostra o AV de cada ação
+  const rows = semAV ? 8 : Math.min(20, Math.max(5, r.acts + 3));
+  let t = "";
+  for (let n = 1; n <= rows; n++) t += semAV
+    ? `<div><span>${n}ª ação</span><span>${(r.dist(n) / r.spd).toFixed(1)} AV · ${Math.max(0, Math.round(2000 - r.dist(n) / r.spd))} pts</span></div>`
+    : `<div class="${n === r.acts ? "cur" : ""}"><span>${n} ${n > 1 ? "ações" : "ação"}${n === r.acts ? " ◀" : ""}</span><span>${r.need(n)} SPD</span></div>`;
+  const cicloTxt = r.isAS ? (r.hasAV ? `até ${r.base} AV` : "sem AV limite") : (r.cIn <= 1 ? "1º ciclo" : r.ciclos + " ciclos (1º=" + r.M.first + ", demais=100)");
+  $("res").innerHTML =
+    `<div class="hint">${esc(r.M.label)} · ${cicloTxt} · avanços: ${r.fw.length ? "[" + r.fw.slice(0, 8).map((f) => f + "%").join(", ") + (r.fw.length > 8 ? ", …" : "") + "]" : "nenhum"}${r.S ? " · início: +" + r.S + "%" : ""}</div>` +
+    (semAV
+      ? `<div class="big">⏱️ AV de cada ação com ${r.spd} SPD</div><div class="hint">Informe em “AV limite” o AV que você leva pra matar o boss para ver as ações garantidas e a SPD necessária.</div>`
+      : `<div class="big">🎯 ${r.acts} ${r.acts === 1 ? "ação garantida" : "ações garantidas"} com ${r.spd} SPD</div>`) +
+    (r.ideal !== null ? `<div class="hint">🏁 Run ideal (${esc(r.M.idealLabel)}): ${r.ideal} ações garantidas</div>` : "") +
+    `<div class="bp">${t}</div>`;
+
+  // simulação por eventos: cada unidade agenda a próxima ação em T + 10000/SPD; as regras puxam o alvo (100·%/SPD de AV)
+  const al = readRows("al", "Aliado"), bad = al.find((u) => u.adv && u.adv.err);
+  if (bad) { $("sim").innerHTML = `<span class="err">❌ ${esc(bad.name)}: ${esc(bad.adv.err)}</span>`; return; }
+  if (r.von + al.reduce((a, u) => a + (u.adv ? u.adv.von : 0), 0) > 1) { $("sim").innerHTML = `<span class="err">❌ Vonwacq só pode estar equipado em 1 personagem.</span>`; return; }
+  const U = [{ name: "Você", spd: r.spd, k: 0, i: 0, slot: 0, S: r.S }];
+  al.forEach((u) => U.push({ name: u.name, spd: u.spd, k: 1, i: u.i, slot: u.i + 1, S: u.adv ? u.adv.S : 0 }));
+  readRows("in", "Inimigo").forEach((u) => U.push({ name: u.name, spd: u.spd, k: 2, i: u.i, slot: -1, S: 0 }));
+  U.forEach((u) => { u.next = Math.max(0, 10000 - 100 * u.S) / u.spd; u.n = 0; });
+  const ign = r.RL.rules.filter((ru) => (ru.a !== -2 && !U.some((u) => u.slot === ru.a)) || !U.some((u) => u.slot === ru.t)).length;
+  const ev = [], avEv = [];
+  r.RL.rules.forEach((ru) => { if (ru.avs) ru.avs.forEach((x) => avEv.push({ av: x, ru, done: false })); });
+  avEv.sort((p, q) => p.av - q.av);
+  const fire = (ru, T, src) => { const t = U.find((u) => u.slot === ru.t); if (!t) return; t.next = Math.max(T, t.next - (100 * ru.pct) / t.spd); ev.push({ mark: true, av: T, text: `↳ ${src}: ${t.name} +${ru.pct}% → age em ${t.next.toFixed(1)} AV` }); };
+  let nAct = 0, guard = 0;
+  while (nAct < 250 && guard++ < 3000) {
+    let a = U[0]; for (const u of U) if (u.next < a.next - 1e-9) a = u;
+    const pend = avEv.find((x) => !x.done && x.av < a.next - 1e-9 && x.av <= r.base + 1e-9);
+    if (pend) { pend.done = true; fire(pend.ru, pend.av, `no AV ${pend.av}`); continue; }
+    if (a.next > r.base + 1e-9) break;
+    const T = a.next; a.n++; nAct++; ev.push({ av: T, who: a.name, n: a.n, k: a.k, i: a.i });
+    a.next = T + 10000 / a.spd;
+    r.RL.rules.forEach((ru) => { if (ru.a === a.slot && (!ru.ns || ru.ns.has(a.n))) fire(ru, T, `${a.name} (${a.n}ª ação)`); });
+    avEv.forEach((x) => { if (!x.done && x.av <= T + 1e-9) { x.done = true; fire(x.ru, T, `no AV ${x.av}`); } });
+  }
+  const cyc = (av) => (r.isAS ? 0 : av <= r.M.first ? 0 : Math.ceil((av - r.M.first) / 100));
+  let h = `<table><tr><th>AV</th><th>Unidade</th><th>Ação</th></tr>`, last = -1;
+  ev.forEach((e) => {
+    if (e.mark) { h += `<tr class="mk"><td colspan="3">${esc(e.text)}</td></tr>`; return; }
+    const c = cyc(e.av);
+    if (c !== last) { h += `<tr class="cy"><td colspan="3">${r.isAS ? `Até ${r.base} AV${r.hasAV ? "" : " (alcance da simulação)"}` : `Ciclo ${c} · até ${c === 0 ? r.M.first : r.M.first + 100 * c} AV`}</td></tr>`; last = c; }
+    h += `<tr class="${e.k === 0 ? "me" : e.k === 2 ? "en" : "a" + e.i}"><td>${e.av.toFixed(1)}${r.isAS && e.k !== 2 ? ` <span class="pt">${Math.max(0, Math.round(2000 - e.av))} pts</span>` : ""}</td><td>${e.k === 2 ? "👾 " : ""}${esc(e.who)}</td><td>${e.n}ª${e.k !== 2 ? ` <button class="pl" type="button" data-s="${e.k === 0 ? 0 : e.i + 1}" data-n="${e.n}" title="adicionar um avanço nesta ação">＋</button>` : ""}</td></tr>`;
+  });
+  $("sim").innerHTML = h + `</table>` + (ign ? `<div class="hint" style="margin-top:4px">⚠️ ${ign} regra(s) ignorada(s): a unidade não tem SPD preenchido.</div>` : "") + (r.isAS ? `<div class="hint" style="margin-top:4px">Contagem de 2000 AV por nó · pts = 2000 − AV.</div>` : "");
+}
+
+// ---- inimigos vindos de uma wiki (opcional): enemies.json ao lado deste arquivo ----
+// formato: [{"modo":"moc","nome":"Nome do inimigo","spd":132,"fonte":"wiki/página ou temporada"}]  (modo: moc | pf | aa)
+let DB = [];
+function fillDb() {
+  const l = DB.filter((d) => d.modo === $("modo").value);
+  $("dbrow").hidden = !l.length;
+  $("dbsel").innerHTML = l.map((d, i) => `<option value="${i}">${esc(d.nome)} — ${d.spd}${d.fonte ? " (" + esc(d.fonte) + ")" : ""}</option>`).join("");
+}
+$("dbadd").onclick = () => {
+  const d = DB.filter((x) => x.modo === $("modo").value)[Number($("dbsel").value)]; if (!d) return;
+  const slot = [...$("in").querySelectorAll(".u")].find((u) => !u.querySelectorAll("input")[1].value);
+  if (!slot) return; const [a, b] = slot.querySelectorAll("input"); a.value = d.nome; b.value = d.spd; render();
+};
+fetch("enemies.json").then((r) => (r.ok ? r.json() : [])).then((d) => { DB = Array.isArray(d) ? d : []; fillDb(); }).catch(() => {});
+
+// atalhos de avanço
+["eagle", "ddd1", "ddd2", "ddd3", "ddd4", "ddd5", "eagle+ddd1", "eagle+ddd2", "eagle+ddd3", "eagle+ddd4", "eagle+ddd5"].forEach((p) => {
+  const b = document.createElement("button"); b.textContent = p; b.type = "button";
+  b.onclick = () => { const el = lastV && lastV.isConnected ? lastV : $("rules").querySelector(".v"); if (!el) return; el.value = (el.value.trim() ? el.value.trim() + "+" : "") + p; render(); };
+  $("chips").appendChild(b);
+});
+const bv = document.createElement("button"); bv.textContent = "vonwacq"; bv.type = "button";
+bv.onclick = () => { $("ini").value = "vonwacq"; render(); }; $("chipsIni").appendChild(bv);
+const bg = document.createElement("button"); bg.textContent = "gmoj"; bg.type = "button";
+bg.onclick = () => { $("ini").value = "gmoj"; render(); }; $("chipsIni").appendChild(bg);
+const li = document.createElement("button"); li.textContent = "limpar"; li.type = "button"; li.style.background = "var(--hint)";
+li.onclick = () => { $("ini").value = ""; render(); }; $("chipsIni").appendChild(li);
+const ar = document.createElement("button"); ar.textContent = "+ regra"; ar.type = "button";
+ar.onclick = () => { addRule(); render(); }; $("chips").prepend(ar);
+
+// ---- regras de avanço: "quando [quem] agir (na ação nº) → avança [quem] em [valor]" ----
+// slots: 0 = Você, 1..3 = aliados (pela posição do campo)
+let lastV = null, selKey = "";
+function readRules() {
+  const out = { rules: [], selfFw: [], other: false, err: null };
+  const fwArr = Array(MAXF).fill(0);
+  for (const d of $("rules").querySelectorAll(".rl")) {
+    const [qa, nn, tt, vv] = d.children, vtxt = vv.value.trim();
+    if (!vtxt) continue;
+    if (/vonwacq/i.test(vtxt)) return { err: "Vonwacq é avanço de início de luta: use o campo “início”." };
+    let pct = 0;
+    for (const t of vtxt.split(/[\s+]+/).filter(Boolean)) { const x = atom(t); if (x === null || x < 0) return { err: `Avanço inválido: ${t}` }; pct += x; }
+    if (qa.value !== "av" && qa.value !== tt.value && /eagle/i.test(vtxt)) return { err: "Eagle só avança quem o usa: só vale quando “quando” e “avança” são o mesmo personagem." };
+    const ntxt = nn.value.trim(); let ns = null;
+    if (qa.value === "av") {
+      const avs = ntxt.split(/[\s,;]+/).filter(Boolean).map(Number);
+      if (!avs.length || avs.some((x) => !Number.isFinite(x) || x < 0)) return { err: "Informe o(s) AV da regra “No AV…” (ex.: 62.5 ou 62.5, 130)." };
+      out.rules.push({ a: -2, t: Number(tt.value), avs, pct }); out.other = true; continue;
+    }
+    if (ntxt && !/^(todas?|\*)$/i.test(ntxt)) { ns = new Set(); for (const p of ntxt.split(/[\s,]+/).filter(Boolean)) { const k = Number(p); if (!Number.isInteger(k) || k < 1) return { err: `Ação inválida: ${p}` }; ns.add(k); } }
+    const a = Number(qa.value), t = Number(tt.value);
+    out.rules.push({ a, t, ns, pct });
+    if (a === 0 && t === 0) { for (let k = 1; k <= MAXF; k++) if (!ns || ns.has(k)) fwArr[k - 1] += pct; } else out.other = true;
+  }
+  let len = MAXF; while (len > 0 && fwArr[len - 1] === 0) len--;
+  out.selfFw = fwArr.slice(0, len);
+  return out;
+}
+function refreshSel(force) {
+  const names = ["Você", ...[...$("al").querySelectorAll(".u")].map((d, i) => d.querySelector("input").value.trim() || `Aliado ${i + 1}`)];
+  const key = names.join("\u0001"); if (!force && key === selKey) return; selKey = key;
+  $("rules").querySelectorAll("select").forEach((s) => { const cur = s.value || "0"; s.innerHTML = names.map((n, i) => `<option value="${i}">${s.className === "q" ? "Quando " + esc(n) + " agir" : "→ avança " + esc(n)}</option>`).join("") + (s.className === "q" ? '<option value="av">No AV…</option>' : ""); s.value = cur; });
+}
+function addRule() {
+  const d = document.createElement("div"); d.className = "rl";
+  d.innerHTML = `<select class="q"></select><input class="n" placeholder="na ação nº (vazio = toda)" autocomplete="off"><select class="t"></select><input class="v" placeholder="valor: eagle+ddd5 ou 49" autocapitalize="off" autocomplete="off"><button type="button" class="rm" title="remover esta regra">×</button>`;
+  $("rules").appendChild(d); refreshSel(true); return d;
+}
+const ph = (d) => { d.children[1].placeholder = d.children[0].value === "av" ? "AV (ex.: 62.5 ou 62.5, 130)" : "na ação nº (vazio = toda)"; };
+$("rules").addEventListener("input", render);
+$("rules").addEventListener("click", (e) => { const b = e.target.closest(".rm"); if (!b) return; b.closest(".rl").remove(); if (!$("rules").children.length) addRule(); render(); });
+$("rules").addEventListener("change", (e) => { const d = e.target.closest(".rl"); if (d) ph(d); render(); });
+$("rules").addEventListener("focusin", (e) => { if (e.target.classList && e.target.classList.contains("v")) lastV = e.target; });
+
+// toque em ＋ numa ação da simulação: abre um mini-formulário na linha e cria a regra "quando [essa unidade] agir na ação nº N"
+const unitNames = () => ["Você", ...[...$("al").querySelectorAll(".u")].map((d, i) => d.querySelector("input").value.trim() || `Aliado ${i + 1}`)];
+$("sim").addEventListener("click", (e) => {
+  const ok = e.target.closest(".okb");
+  if (ok) {
+    const ed = ok.closest("tr.ed"), b = ed.previousElementSibling && ed.previousElementSibling.querySelector(".pl");
+    const val = ed.querySelector("input").value.trim(), tgt = ed.querySelector("select").value;
+    if (val && b && /eagle/i.test(val) && tgt !== b.dataset.s) { ed.querySelector(".em").textContent = "Eagle só avança quem o usa (quem agiu)."; return; }
+    if (val && b) {
+      const d = [...$("rules").querySelectorAll(".rl")].find((x) => !x.children[3].value.trim()) || addRule();
+      d.children[0].value = b.dataset.s; d.children[1].value = b.dataset.n; d.children[2].value = tgt; d.children[3].value = val; ph(d);
+    }
+    render(); return;
+  }
+  const b = e.target.closest(".pl"); if (!b) return;
+  const tr = b.closest("tr"), nx = tr.nextElementSibling;
+  $("sim").querySelectorAll("tr.ed").forEach((x) => x.remove());
+  if (nx && nx.classList.contains("ed")) return;
+  const ed = document.createElement("tr"); ed.className = "ed";
+  ed.innerHTML = `<td colspan="3"><div class="rl" style="grid-template-columns:1fr 1fr auto"><select>${unitNames().map((n, i) => `<option value="${i}">→ avança ${esc(n)}</option>`).join("")}</select><input placeholder="eagle+ddd5 ou 49" autocapitalize="off" autocomplete="off"><button type="button" class="pl okb">OK</button><div class="em err" style="grid-column:1/-1;font-size:11px"></div></div></td>`;
+  tr.after(ed); ed.querySelector("input").focus();
+});
+$("sim").addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.closest("tr.ed")) { e.preventDefault(); e.target.closest("tr.ed").querySelector(".okb").click(); } });
+
+mkRows("al", 3, "Aliado", [], true);
+mkRows("in", 5, "Inimigo", []);
+
+// pré-preenchimento: ?m=moc&s=160&c=1&f=vonwacq,2eagle  ou  start_param do Mini App: moc_160_1_vonwacq-2eagle (p = "+")
+(function init() {
+  const q = new URLSearchParams(location.search); let m = q.get("m"), s = q.get("s"), c = q.get("c"), f = q.get("f"), ii = q.get("i");
+  const sp = tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param;
+  if (sp && !s) { const [a, b, d, e, g] = sp.split("_"); m = a; s = b; c = d; ii = g ? g.split("-").join(",") : ""; f = e ? e.replace(/p/g, "+").split("-").join(",") : ""; }
+  if (m && MODES[m]) $("modo").value = m;
+  if (s) $("spd").value = s;
+  if (c) $("ciclos").value = c;
+  // links antigos do bot traziam vonwacq junto dos avanços: move pro campo de início
+  let fl = f ? f.split(",").filter(Boolean) : [], il = ii ? ii.split(",").filter(Boolean) : [];
+  il = il.concat(fl.filter((x) => /^vonwacq$/i.test(x))); fl = fl.filter((x) => !/^vonwacq$/i.test(x));
+  if (il.length) $("ini").value = il.join(" ");
+  // avanços de links antigos (sequência de ações de Você) viram regras "Você → Você"; ações com o mesmo valor ficam na mesma regra
+  const seq = fl.flatMap(tok), grp = new Map();
+  seq.forEach((v, k) => { if (!grp.has(v)) grp.set(v, []); grp.get(v).push(k + 1); });
+  grp.forEach((ns, v) => { const d = addRule(); d.children[1].value = ns.join(","); d.children[3].value = String(v); });
+})();
+["modo", "spd", "ciclos", "ini"].forEach((id) => $(id).addEventListener("input", render));
+function syncMode() { const as = $("modo").value === "as"; $("clab").textContent = as ? "AV limite" : "Ciclos"; $("ciclos").placeholder = as ? "AV" : "1º"; }
+$("modo").addEventListener("change", () => { syncMode(); fillDb(); });
+$("vg").addEventListener("click", (e) => { if (tg && tg.openTelegramLink) { e.preventDefault(); tg.openTelegramLink("https://t.me/StarRailBR"); } });
+if (!$("rules").children.length) addRule();
+syncMode();
+render();
+</script>
+</body>
+</html>
