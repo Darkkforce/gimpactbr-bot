@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Taxa de acerto — HSR</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{--bg:var(--tg-theme-bg-color,#14131f);--sf:var(--tg-theme-secondary-bg-color,#1e1c2e);--tx:var(--tg-theme-text-color,#ecebf5);--hint:var(--tg-theme-hint-color,#9a97b5);--ac:var(--tg-theme-button-color,#8b7cf6);--act:var(--tg-theme-button-text-color,#fff)}
+@media (prefers-color-scheme:light){:root{--bg:var(--tg-theme-bg-color,#fff);--sf:var(--tg-theme-secondary-bg-color,#f1f0f8);--tx:var(--tg-theme-text-color,#1b1a2b);--hint:var(--tg-theme-hint-color,#6b6985);--ac:var(--tg-theme-button-color,#5b4bd6)}}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:calc(env(safe-area-inset-top,0px) + 20px) 16px calc(env(safe-area-inset-bottom,0px) + 24px)}
+main{max-width:520px;margin:0 auto}
+h1{font-size:1.4rem;margin:0 0 4px}.sub{color:var(--hint);margin:0 0 18px;font-size:.9rem}
+label{display:block;font-size:.85rem;color:var(--hint);margin:12px 0 4px}
+input{width:100%;padding:12px;border-radius:12px;border:0;background:var(--sf);color:var(--tx);font:inherit}
+input:focus-visible{outline:2px solid var(--ac)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.out{margin-top:20px;background:var(--sf);border-radius:16px;padding:16px}
+.big{font-size:2rem;font-weight:700;color:var(--ac);line-height:1.1}
+.hint{color:var(--hint);font-size:.85rem;margin-top:6px}
+</style>
+</head>
+<body>
+<main>
+<h1>Taxa de acerto de efeito</h1>
+<p class="sub">Quanto de acerto de efeito você precisa para o debuff entrar sempre.</p>
+
+<label for="base">Chance base do debuff (%)</label>
+<input id="base" inputmode="decimal" placeholder="ex.: 80" autocomplete="off">
+<div class="row">
+  <div><label for="re">RES a efeitos do inimigo (%)</label><input id="re" inputmode="decimal" value="40"></div>
+  <div><label for="rd">RES ao debuff (%)</label><input id="rd" inputmode="decimal" value="0"></div>
+</div>
+<label for="meu">Seu acerto de efeito atual (%) — opcional</label>
+<input id="meu" inputmode="decimal" placeholder="para ver a chance real">
+
+<section class="out" aria-live="polite">
+  <div class="hint">Acerto necessário para garantir</div>
+  <div class="big" id="need">—</div>
+  <div class="hint" id="msg"></div>
+  <div class="hint" id="real" style="margin-top:12px"></div>
+</section>
+</main>
+<script>
+const tg = window.Telegram && Telegram.WebApp;
+if (tg) { tg.ready(); tg.expand(); if (tg.BackButton) { tg.BackButton.show(); tg.BackButton.onClick(() => { location.href = "../"; }); } }
+const $ = (id) => document.getElementById(id);
+// mesma regra do /acerto do bot: valor >= 1 é percentual; 0.8 digitado já é fração
+function num(v) { const x = parseFloat(String(v).replace("%", "").replace(",", ".")); return isNaN(x) ? null : x; }
+function chanceBase(v) { let x = num(v); if (x === null || x <= 0 || x > 100) return null; return x >= 1 ? x / 100 : x; }
+const pct = (x) => (x * 100).toFixed(2).replace(".", ",") + "%";
+function calc() {
+  const b = chanceBase($("base").value), re = (num($("re").value) ?? 0) / 100, rd = (num($("rd").value) ?? 0) / 100;
+  const meu = num($("meu").value);
+  if (b === null) { $("need").textContent = "—"; $("msg").textContent = $("base").value ? "Use um valor entre 1 e 100." : ""; $("real").textContent = ""; return; }
+  if (re >= 1 || rd >= 1) { $("need").textContent = "impossível"; $("msg").textContent = "Com 100% de RES o efeito nunca entra."; $("real").textContent = ""; return; }
+  const k = b * (1 - re) * (1 - rd);       // chance real quando o acerto é 0
+  const need = 1 / k - 1;                  // acerto necessário para chegar a 100%
+  $("need").textContent = need <= 0 ? "0%" : pct(need);
+  $("msg").textContent = "Chance base interpretada: " + pct(b) + (need <= 0 ? " — não precisa de acerto de efeito." : ".");
+  $("real").textContent = meu === null ? "" : "Com " + pct(meu / 100) + " de acerto, a chance real é " + pct(Math.min(1, k * (1 + meu / 100))) + ".";
+}
+["base", "re", "rd", "meu"].forEach((id) => $(id).addEventListener("input", calc));
+(function init() {
+  const q = new URLSearchParams(location.search);
+  const sp = tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param;   // acerto_80
+  const c = q.get("c") || (sp && sp.startsWith("acerto_") ? sp.slice(7) : "");
+  if (c) $("base").value = c;
+  if (q.get("r")) $("re").value = q.get("r");
+  if (q.get("d")) $("rd").value = q.get("d");
+  calc();
+})();
+</script>
+</body>
+</html>
