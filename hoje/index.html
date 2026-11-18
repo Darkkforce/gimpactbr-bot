@@ -1,210 +1,145 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Ferramentas</title>
+<title>Hoje — Genshin, HSR e ZZZ</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-  /* Cores: usa o tema do Telegram quando abre dentro do app;
-     os valores depois da vírgula valem em um navegador comum. */
-  :root {
-    --bg: var(--tg-theme-bg-color, #14131f);
-    --surface: var(--tg-theme-secondary-bg-color, #1e1c2e);
-    --text: var(--tg-theme-text-color, #ecebf5);
-    --hint: var(--tg-theme-hint-color, #9a97b5);
-    --accent: var(--tg-theme-button-color, #8b7cf6);
-    --accent-text: var(--tg-theme-button-text-color, #ffffff);
-  }
-  @media (prefers-color-scheme: light) {
-    :root {
-      --bg: var(--tg-theme-bg-color, #ffffff);
-      --surface: var(--tg-theme-secondary-bg-color, #f1f0f8);
-      --text: var(--tg-theme-text-color, #1b1a2b);
-      --hint: var(--tg-theme-hint-color, #6b6985);
-      --accent: var(--tg-theme-button-color, #5b4bd6);
-    }
-  }
-
-  * { box-sizing: border-box; }
-  html, body { margin: 0; }
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: "Sora", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    line-height: 1.45;
-    padding: calc(env(safe-area-inset-top, 0px) + 28px) 16px calc(env(safe-area-inset-bottom, 0px) + 28px);
-    min-height: 100vh;
-  }
-  main { max-width: 520px; margin: 0 auto; }
-
-  h1 { font-size: 1.75rem; line-height: 1.15; margin: 0 0 6px; font-weight: 700; letter-spacing: -0.02em; }
-  .sub { margin: 0 0 28px; color: var(--hint); font-size: 0.95rem; max-width: 36ch; }
-
-  .apps { display: grid; gap: 10px; }
-
-  .app {
-    display: grid;
-    grid-template-columns: 52px 1fr auto;
-    align-items: center;
-    gap: 14px;
-    min-height: 76px;
-    padding: 12px 16px 12px 12px;
-    background: var(--surface);
-    border-radius: 18px;
-    color: inherit;
-    text-decoration: none;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .app:active { transform: scale(0.985); }
-  .app:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-
-  .icon {
-    width: 52px; height: 52px;
-    border-radius: 14px;
-    background: var(--accent);
-    color: var(--accent-text);
-    display: grid; place-items: center;
-  }
-  .icon svg { width: 26px; height: 26px; }
-
-  .name { font-weight: 600; font-size: 1rem; }
-  .desc { color: var(--hint); font-size: 0.85rem; margin-top: 2px; }
-
-  .go { color: var(--hint); display: grid; place-items: center; }
-  .go svg { width: 20px; height: 20px; }
-
-  @media (prefers-reduced-motion: reduce) { .app:active { transform: none; } }
+:root{--bg:var(--tg-theme-bg-color,#14131f);--sf:var(--tg-theme-secondary-bg-color,#1e1c2e);--tx:var(--tg-theme-text-color,#ecebf5);--hint:var(--tg-theme-hint-color,#9a97b5);--ac:var(--tg-theme-button-color,#8b7cf6);--act:var(--tg-theme-button-text-color,#fff)}
+@media (prefers-color-scheme:light){:root{--bg:var(--tg-theme-bg-color,#fff);--sf:var(--tg-theme-secondary-bg-color,#f1f0f8);--tx:var(--tg-theme-text-color,#1b1a2b);--hint:var(--tg-theme-hint-color,#6b6985);--ac:var(--tg-theme-button-color,#5b4bd6)}}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:calc(env(safe-area-inset-top,0px) + 16px) 16px calc(env(safe-area-inset-bottom,0px) + 24px)}
+main{max-width:560px;margin:0 auto}
+h1{font-size:1.4rem;margin:0 0 12px}h2{font-size:.95rem;margin:16px 0 6px;color:var(--hint);font-weight:600}
+.seg{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.seg button{flex:1;min-width:0;padding:9px 10px;border:0;border-radius:10px;background:var(--sf);color:var(--tx);font:inherit;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--ac);color:var(--act);font-weight:600}
+button:focus-visible,a:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.card{background:var(--sf);border-radius:14px;padding:12px;margin-bottom:8px}
+.t{font-weight:600}.m{color:var(--hint);font-size:.85rem;margin-top:2px}
+.bar{height:4px;border-radius:2px;background:color-mix(in srgb,var(--hint) 30%,transparent);margin-top:8px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ac)}
+.s5{font-weight:700}
+.code{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.code code{font-size:1rem;font-weight:700;letter-spacing:.03em;word-break:break-all}
+.cp{border:0;border-radius:8px;padding:7px 12px;background:var(--ac);color:var(--act);font:inherit;cursor:pointer;white-space:nowrap}
+.lnk{display:inline-block;margin-top:6px;color:var(--ac)}
+.err{color:#e5484d}.err button{margin-top:8px;padding:8px 14px;border:0;border-radius:10px;background:var(--ac);color:var(--act);font:inherit}
+.up{color:var(--hint);font-size:.8rem;margin-top:12px}
 </style>
 </head>
 <body>
 <main>
-  <h1>Ferramentas</h1>
-  <p class="sub"></p>
-
-  <nav class="apps" aria-label="Utilitários">
-
-    <!-- App da mesma pasta do site: abre normalmente dentro do Mini App -->
-    <a class="app" href="vel/">
-      <span class="icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14l4-4"/><path d="M3.3 17a9 9 0 1 1 17.4 0"/></svg>
-      </span>
-      <span>
-        <span class="name">Calculadora de velocidade</span>
-        <span class="desc" style="display:block">Calculadora de speed / simulador de combate para honkai star rail</span>
-      </span>
-      <span class="go" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-      </span>
-    </a>
-
-    <!-- App de outro site: data-external abre pelo Telegram (o hub continua aberto por baixo) -->
-    <a class="app" href="https://aphelg7.github.io/RelicRecon/" target="_blank" rel="noopener">
-      <span class="icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4.5v9L12 20l-8-4.5v-9z"/><path d="M12 11l8-4.5M12 11v9M12 11L4 6.5"/></svg>
-      </span>
-      <span>
-        <span class="name">RelicRecon</span>
-        <span class="desc" style="display:block">Te mostra quem selecionar no evento para obter reliquias ideais de acordo com os status preferidos do personagem.</span>
-      </span>
-      <span class="go" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M8 7h9v9"/></svg>
-      </span>
-    </a>
-
-    <a class="app" href="acerto/">
-      <span class="icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg>
-      </span>
-      <span>
-        <span class="name">Taxa de acerto</span>
-        <span class="desc" style="display:block">Quanto acerto de efeito você precisa para o debuff entrar sempre (Honkai: Star Rail)</span>
-      </span>
-      <span class="go" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-      </span>
-    </a>
-
-    <a class="app" href="materiais/">
-      <span class="icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>
-      </span>
-      <span>
-        <span class="name">Planejador de materiais</span>
-        <span class="desc" style="display:block">Materiais de ascensão e talentos de personagem + arma (Genshin Impact)</span>
-      </span>
-      <span class="go" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-      </span>
-    </a>
-
-    <a class="app" href="hoje/">
-      <span class="icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>
-      </span>
-      <span>
-        <span class="name">Hoje</span>
-        <span class="desc" style="display:block">Eventos, banners, endgame e códigos de Genshin, Star Rail e Zenless</span>
-      </span>
-      <span class="go" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-      </span>
-    </a>
-
-    <!-- Para adicionar outro app, copie um bloco <a class="app"> acima e troque href, nome e descrição. -->
-
-  </nav>
+<h1>Hoje</h1>
+<div class="seg" id="tabs" role="group" aria-label="Seção"></div>
+<div class="seg" id="games" role="group" aria-label="Jogo"></div>
+<div id="out" aria-live="polite"></div>
+<div class="up" id="up"></div>
 </main>
-
 <script>
-  const tg = window.Telegram && window.Telegram.WebApp;
+const tg = window.Telegram && Telegram.WebApp;
+if (tg) { tg.ready(); tg.expand(); }
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+// mesmas fontes públicas que o bot usa
+const GAMES = {
+  genshin: { n: "Genshin", cal: "genshin", code: "genshin", url: "https://genshin.hoyoverse.com/pt-pt/gift", ban: true },
+  hsr: { n: "Star Rail", cal: "starrail", code: "hkrpg", url: "https://hsr.hoyoverse.com/gift", ban: true },
+  zzz: { n: "Zenless", cal: "zenless", code: "nap", url: "https://zenless.hoyoverse.com/redemption", ban: false },
+};
+const TABS = { eventos: "Eventos", banners: "Banners", codigos: "Códigos" };
+const ENDGAME = { ChallengeTypeStory: "🏛 Salão do Esquecimento", ChallengeTypeChasm: "📖 Pura Ficção", ChallengeTypeBoss: "⚔️ Sombra Apocalíptica", ChallengeTypePeak: "🌌 Anomalia de Arbitragem" };
+const TTL = 5 * 60 * 1000, SANE = 1600000000;
+let T = "eventos", G = "genshin", tok = 0; const cache = new Map();
 
-  if (tg) {
-    tg.ready();
-    tg.expand();
-    tg.BackButton.hide(); // o menu é a tela inicial, não tem pra onde voltar
+const clean = (n) => typeof n !== "string" ? "" : n.replace(/&nbsp;/g, " ").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&").replace(/<\/?[a-zA-Z][^>]*>/g, "").replace(/\s+/g, " ").trim();
+const dfmt = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+const fd = (u) => dfmt.format(new Date(u * 1000)).replace(",", "");
+const rem = (s) => { const h = Math.max(1, Math.ceil(s / 3600)), d = Math.floor(h / 24), r = h % 24; return d === 0 ? r + "h" : r === 0 ? d + "d" : d + "d " + r + "h"; };
+const okEnd = (b) => b.end_time > b.start_time && b.end_time > SANE;
 
-    // Links externos: abre pelo Telegram em vez de trocar a página do Mini App
-    document.querySelectorAll("a[data-external]").forEach((a) => {
-      a.addEventListener("click", (e) => {
-        e.preventDefault();
-        tg.openLink(a.href);
-      });
+async function get(url) {
+  const hit = cache.get(url); if (hit && Date.now() - hit.t < TTL) return hit;
+  const c = new AbortController(), id = setTimeout(() => c.abort(), 15000);
+  try { const r = await fetch(url, { signal: c.signal }); if (!r.ok) throw new Error(r.status); const o = { t: Date.now(), d: await r.json() }; cache.set(url, o); return o; }
+  finally { clearTimeout(id); }
+}
+const calUrl = (g) => "https://api.ennead.cc/mihoyo/" + GAMES[g].cal + "/calendar?lang=pt-pt";
+const codeUrl = (g) => "https://hoyo-codes.seria.moe/codes?game=" + GAMES[g].code;
+
+function items(b) { const a = [...(b.characters || []), ...(b.weapons || []), ...(b.light_cones || [])].sort((x, y) => (y.rarity || 0) - (x.rarity || 0)); return a.map((i) => (i.rarity >= 5 ? `<span class="s5">${esc(i.name)}</span>` : esc(i.name)) + ` (${esc(i.rarity)}★)`).join(", ") || "(sem detalhe de itens)"; }
+function card(x, now, up, extra) {
+  const ended = okEnd(x), prog = !up && ended ? Math.min(100, Math.max(0, ((now - x.start_time) / (x.end_time - x.start_time)) * 100)) : null;
+  const when = !ended ? (up ? "Começa em " + fd(x.start_time) + " — fim ainda não anunciado" : "Desde " + fd(x.start_time) + " — fim ainda não anunciado")
+    : fd(x.start_time) + " → " + fd(x.end_time) + (up ? " · começa em " + rem(x.start_time - now) : " · faltam " + rem(x.end_time - now));
+  return `<div class="card"><div class="t">${extra || ""}${esc(x.name)}</div>${x.sub ? `<div class="m">${x.sub}</div>` : ""}<div class="m">${when}</div>${prog !== null ? `<div class="bar"><i style="width:${prog}%"></i></div>` : ""}</div>`;
+}
+const sec = (t, list) => list.length ? `<h2>${t}</h2>${list.join("")}` : "";
+
+function viewEventos(cal) {
+  const now = Date.now() / 1000, ev = (cal.events || []).map((e) => ({ ...e, name: clean(e.name) })).filter((e) => e.name);
+  const act = ev.filter((e) => e.start_time <= now && e.end_time >= now).sort((a, b) => a.end_time - b.end_time);
+  const nxt = ev.filter((e) => e.start_time > now).sort((a, b) => a.start_time - b.start_time).slice(0, 5);
+  let h = sec("Ativos agora", act.map((e) => card(e, now, false))) + sec("Próximos", nxt.map((e) => card(e, now, true)));
+  if (G === "hsr" && Array.isArray(cal.challenges)) {
+    const ch = cal.challenges.map((c) => ({ ...c, name: clean(c.name) }));
+    const lab = (c) => (ENDGAME[c.type_name] || esc(c.type_name)) + " — ";
+    h += sec("Endgame — em andamento", ch.filter((c) => c.start_time <= now && c.end_time >= now).sort((a, b) => a.start_time - b.start_time).map((c) => card(c, now, false, lab(c))))
+      + sec("Endgame — próximos", ch.filter((c) => c.start_time > now).sort((a, b) => a.start_time - b.start_time).map((c) => card(c, now, true, lab(c))));
+  }
+  return h || `<div class="m">Nenhum evento ativo ou próximo encontrado.</div>`;
+}
+function viewBanners(cal) {
+  const now = Date.now() / 1000, bn = (cal.banners || []).map((b) => ({ ...b, name: clean(b.name), sub: items(b) }));
+  const act = bn.filter((b) => b.start_time <= now && okEnd(b) && b.end_time >= now);
+  const nxt = bn.filter((b) => b.start_time > now).sort((a, b) => a.start_time - b.start_time);
+  return sec("Ativos agora", act.map((b) => card(b, now, false))) + sec("Próximos", nxt.map((b) => card(b, now, true))) || `<div class="m">Nenhum banner ativo ou próximo encontrado.</div>`;
+}
+function viewCodigos(d) {
+  const list = (d.codes || []).filter((c) => c.status === "OK");
+  const link = `<a class="lnk" href="${GAMES[G].url}" data-ext>Resgatar no site oficial ↗</a>`;
+  if (!list.length) return `<div class="m">Nenhum código ativo agora.</div>${link}`;
+  return list.map((c) => `<div class="card"><div class="code"><code>${esc(c.code)}</code><button class="cp" data-cp="${esc(c.code)}">Copiar</button></div><div class="m">${esc(clean(String(c.rewards || "")))}</div></div>`).join("") + link
+    + `<div class="m" style="margin-top:6px">Alguns códigos podem ser regionais e não funcionar em toda conta.</div>`;
+}
+
+async function render() {
+  const my = ++tok;
+  $("tabs").innerHTML = Object.entries(TABS).map(([k, v]) => `<button data-t="${k}" aria-pressed="${k === T}">${v}</button>`).join("");
+  $("games").innerHTML = Object.entries(GAMES).map(([k, v]) => `<button data-g="${k}" aria-pressed="${k === G}">${v.n}</button>`).join("");
+  if (T === "banners" && !GAMES[G].ban) { $("out").innerHTML = `<div class="m">A fonte não traz banners de Zenless Zone Zero.</div>`; $("up").textContent = ""; return; }
+  $("out").innerHTML = `<div class="m">Carregando…</div>`;
+  try {
+    const r = await get(T === "codigos" ? codeUrl(G) : calUrl(G));
+    if (my !== tok) return;
+    $("out").innerHTML = T === "eventos" ? viewEventos(r.d) : T === "banners" ? viewBanners(r.d) : viewCodigos(r.d);
+    $("up").textContent = "Atualizado às " + new Date(r.t).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) + " · horários de Brasília, podem variar 1–2h (fonte: HoYoLAB)";
+  } catch (e) {
+    if (my !== tok) return;
+    $("up").textContent = "";
+    $("out").innerHTML = `<div class="err">Não consegui carregar agora.<br><button id="rt">Tentar de novo</button></div>`;
+    $("rt").onclick = () => { cache.clear(); render(); };
+  }
+}
+document.addEventListener("click", (e) => {
+  const t = e.target.closest("[data-t]"), g = e.target.closest("[data-g]"), c = e.target.closest("[data-cp]"), x = e.target.closest("[data-ext]");
+  if (t) { T = t.dataset.t; render(); }
+  if (g) { G = g.dataset.g; render(); }
+  if (x && tg && tg.openLink) { e.preventDefault(); tg.openLink(x.href); }
+  if (c) {
+    const v = c.dataset.cp, ok = () => { c.textContent = "Copiado ✓"; setTimeout(() => { c.textContent = "Copiar"; }, 1500); };
+    (navigator.clipboard ? navigator.clipboard.writeText(v) : Promise.reject()).then(ok, () => {
+      const a = document.createElement("textarea"); a.value = v; document.body.appendChild(a); a.select();
+      try { document.execCommand("copy"); ok(); } catch (_) {} a.remove();
     });
   }
-
-  // Roteia o link do bot (t.me/gimpactbr_bot/hsr_calc?startapp=...) para a ferramenta certa:
-  //   moc_160_1_vonwacq-2eagle  -> vel/    (formato do /vel; também pf_, aa_, as_)
-  //   hoje_eventos_hsr          -> hoje/   (abas: eventos, banners, codigos; jogos: genshin, hsr, zzz)
-  //   acerto_80                 -> acerto/
-  //   mat_<idPersonagem>_<idArma> -> materiais/
-  (function () {
-    const sp = tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param;
-    if (!sp) return;
-    const p = sp.split("_");
-    if (p[0] === "hoje") {
-      location.replace("hoje/?t=" + encodeURIComponent(p[1] || "") + "&g=" + encodeURIComponent(p[2] || ""));
-    } else if (p[0] === "acerto") {
-      location.replace("acerto/?c=" + encodeURIComponent(p[1] || ""));
-    } else if (p[0] === "mat") {
-      const q = new URLSearchParams();
-      if (p[1] && p[1] !== "0") q.set("c", p[1]);
-      if (p[2] && p[2] !== "0") q.set("w", p[2]);
-      location.replace("materiais/?" + q);
-    } else if (["moc", "pf", "aa", "as"].includes(p[0])) {
-      const q = new URLSearchParams();
-      q.set("m", p[0]);
-      if (p[1]) q.set("s", p[1]);
-      if (p[2]) q.set("c", p[2]);
-      if (p[3]) q.set("f", p[3].replace(/p/g, "+").split("-").join(","));   // "p" = "+", "-" separa itens
-      if (p[4]) q.set("i", p[4].split("-").join(","));
-      location.replace("vel/?" + q);
-    }
-  })();
+});
+(function init() {
+  const q = new URLSearchParams(location.search);       // ?t=eventos|banners|codigos&g=genshin|hsr|zzz
+  if (TABS[q.get("t")]) T = q.get("t"); if (GAMES[q.get("g")]) G = q.get("g");
+  render();
+})();
 </script>
-<script src="extras.js" data-home></script>
+<script src="../extras.js"></script>
 </body>
 </html>
