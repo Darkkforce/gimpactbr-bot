@@ -24,14 +24,17 @@ input,select{width:100%;padding:6px 8px;border:1px solid var(--line);border-radi
 .cols{display:grid;grid-template-columns:3fr 2fr;gap:8px}@media(max-width:360px){.cols{grid-template-columns:1fr}}
 .u{display:flex;gap:4px;margin-bottom:4px}.u input[type=number]{width:62px;flex:none}.u .me{flex:1;padding:6px 8px;color:var(--hint)}
 .u.ext{flex-wrap:wrap;margin-bottom:6px}.u.ext input:first-child{width:auto;flex:1 1 calc(100% - 66px)}.u.ext input.x{width:auto;flex:1 1 100%;font-size:12px;padding:4px 6px}
-.rl{display:grid;grid-template-columns:1fr 1fr 28px;gap:4px;margin-top:5px}.rl .rm{grid-column:3;grid-row:1/3;border:0;border-radius:6px;background:var(--hint);color:var(--btnfg);font-size:16px;line-height:1;cursor:pointer}.rl select,.rl input{font-size:12px;padding:4px 6px}
-.pl{border:0;border-radius:6px;background:var(--btn);color:var(--btnfg);padding:0 7px;font-size:13px;line-height:18px;margin-left:4px;cursor:pointer}
+.rl{display:grid;grid-template-columns:1fr 1fr 28px;gap:4px;margin-top:5px}.rl .rm{grid-column:3;grid-row:1/4;border:0;border-radius:6px;background:var(--hint);color:var(--btnfg);font-size:16px;line-height:1;cursor:pointer}.rl select,.rl input{font-size:12px;padding:4px 6px}
+.cr{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}.cr button{flex:none;padding:3px 10px;border:0;border-radius:999px;background:var(--btn);color:var(--btnfg);font-size:12px}
+.pl,.lb{border:0;border-radius:6px;background:var(--btn);color:var(--btnfg);padding:0 7px;font-size:13px;line-height:18px;margin-left:4px;cursor:pointer}
 tr.mk td{font-size:11px;color:var(--hint);padding:0 6px 2px 16px;white-space:normal}tr.ed td{padding:3px 6px;white-space:normal}
 .wrap{overflow-x:auto;margin-top:6px}table{width:100%;border-collapse:collapse;font-size:13px}td,th{text-align:left;padding:2px 6px;white-space:nowrap}
 th{color:var(--hint);font-weight:500}tr.cy td{background:var(--line);font-size:11px;color:var(--hint);padding:1px 6px}tr.me td{font-weight:700;color:var(--btn)}tr.en td:nth-child(2){color:#dc2626}
 button.add{margin-top:2px;padding:5px 9px;border:0;border-radius:7px;background:var(--btn);color:var(--btnfg)}
 .vg{display:inline-flex;align-items:center;gap:8px;margin:0 0 8px;padding:6px 16px 6px 12px;border-radius:999px;background:#0f2a5f;border:1px solid #3d6fd6;color:#fff;font-weight:500;text-decoration:none;box-shadow:0 0 8px rgba(61,111,214,.45)}.vg svg{width:16px;height:16px;filter:drop-shadow(0 0 3px #fff)}
 .pt{color:var(--hint);font-size:11px;font-weight:400;margin-left:4px}
+.u select{width:96px;flex:none;font-size:12px;padding:4px}tr.sm td:nth-child(2){color:#0891b2;font-weight:600}
+.tlr{display:flex;align-items:center;gap:6px;margin-top:3px;font-size:11px}.tlr>span{width:76px;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bar{position:relative;flex:1;height:14px;background:var(--line);border-radius:7px}.bar i{position:absolute;top:2px;width:5px;height:10px;border-radius:2px;transform:translateX(-50%)}
 /* cores dos aliados: a0 verde, a1 laranja, a2 roxo (você = azul, inimigos = vermelho) */
 .u.a0 input:first-child{border-left:3px solid #16a34a}.u.a1 input:first-child{border-left:3px solid #d97706}.u.a2 input:first-child{border-left:3px solid #9333ea}
 tr.a0 td:nth-child(2){color:#16a34a;font-weight:600}tr.a1 td:nth-child(2){color:#d97706;font-weight:600}tr.a2 td:nth-child(2){color:#9333ea;font-weight:600}
@@ -42,18 +45,30 @@ tr.a0 td:nth-child(2){color:#16a34a;font-weight:600}tr.a1 td:nth-child(2){color:
 <h1>🏃 Velocidade e breakpoints — HSR</h1>
 
 <div class="card">
+  <h2 style="margin-top:0">⚙️ Modo de jogo</h2>
   <div class="row">
     <div><label for="modo">Modo</label><select id="modo"><option value="moc">Memory of Chaos</option><option value="pf">Pure Fiction</option><option value="aa">Anomaly Arbitration</option><option value="as">Apocalyptic Shadow</option></select></div>
-    <div><label for="spd">SPD</label><input id="spd" type="number" inputmode="decimal" min="1" step="any" value="160"></div>
     <div><label for="ciclos" id="clab">Ciclos</label><input id="ciclos" type="number" inputmode="numeric" min="0" placeholder="1º"></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2 style="margin-top:0">🎯 Personagem foco</h2>
+  <div class="row">
+    <div style="flex:2"><label for="nome">Nome</label><input id="nome" placeholder="Você" maxlength="20" autocomplete="off"></div>
+    <div><label for="spd">SPD</label><input id="spd" type="number" inputmode="decimal" min="1" step="any" value="160"></div>
   </div>
   <label for="ini">Avanço no início da luta (Vonwacq, God's Moment of Joy, avanço próprio do personagem)</label>
   <input id="ini" type="text" placeholder="vonwacq  ou  gmoj  ou  40  ou  vonwacq+20" autocapitalize="off" autocomplete="off">
   <div class="chips" id="chipsIni"></div>
-  <label>Avanços durante a luta — quando alguém agir, avança alguém</label>
+</div>
+
+<div class="card">
+  <h2 style="margin-top:0">⏩ Avanços durante a luta</h2>
+  <label>Quando alguém agir, avança alguém</label>
   <div id="rules"></div>
-  <div class="hint" style="margin-top:3px">Os atalhos entram no último campo “valor” tocado; valores se somam (eagle+ddd5). Para escolher o momento: use “No AV…” no primeiro seletor, ou toque em ＋ numa ação da simulação.</div>
-  <div class="chips" id="chips"></div>
+  <div class="hint" style="margin-top:3px">Atalhos entram no último “valor” tocado; valores se somam (eagle+ddd5). Use extra4 para turnos extras, -20 para atrasar e spd20x2 para SPD +20% por 2 ações. “Durante o turno” acontece logo após a ação, antes dos turnos extras; “após o turno”, depois de tudo. Toque em ＋ numa ação da simulação para criar uma regra ali.</div>
+  <div id="chips"></div>
   <div id="warn"></div>
 </div>
 
@@ -62,12 +77,16 @@ tr.a0 td:nth-child(2){color:#16a34a;font-weight:600}tr.a1 td:nth-child(2){color:
 <h2>⚔️ Simulação de turnos (ordem por AV)</h2>
 <div class="card">
   <div class="cols">
-    <div><label>Aliados — você é o primeiro (nome, SPD e avanço de início)</label><div class="u"><div class="me" id="meRow"></div></div><div id="al"></div></div>
+    <div><label>Aliados — o personagem foco é o primeiro (nome, SPD e avanço de início)</label><div class="u"><div class="me" id="meRow"></div></div><div id="al"></div></div>
     <div><label>Inimigos (nome e SPD)</label><div id="in"></div>
       <div id="dbrow" hidden><select id="dbsel"></select><button class="add" id="dbadd" type="button">+ adicionar</button></div></div>
   </div>
+  <label>Invocações — nome, SPD (ou % da SPD do dono) e dono</label><div id="sm"></div>
   <div class="wrap" id="sim"></div>
 </div>
+<div class="row"><button class="add" id="share" type="button">🔗 Copiar link</button><button class="add" id="shcode" type="button">📋 Copiar código</button></div>
+<div class="row" style="margin-top:6px"><input id="imp" placeholder="Cole aqui um código ou link para importar" autocomplete="off" autocapitalize="off"><button class="add" id="impb" type="button">Importar</button></div>
+<div class="row" style="margin-top:6px"><select id="sv" style="flex:1"></select><button class="add" id="svl" type="button">Carregar</button><button class="add" id="svs" type="button">💾 Salvar</button><button class="add" id="svd" type="button">🗑</button></div>
 
 <script>
 const tg = window.Telegram && Telegram.WebApp;
@@ -95,6 +114,8 @@ function tok(t) {
 const vonCount = (ts) => ts.reduce((a, t) => a + t.split("+").reduce((b, p) => { const m = p.match(RE); return b + (m && m[2].toLowerCase() === "vonwacq" ? (m[1] ? parseInt(m[1], 10) : 1) : 0); }, 0), 0);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const $ = (id) => document.getElementById(id);
+const LBL = {}; // rótulo por ação: "slot:n" -> B / S / U
+const focusName = () => $("nome").value.trim() || "Você";
 
 function compute() {
   const M = MODES[$("modo").value], spd = Number($("spd").value);
@@ -152,8 +173,8 @@ function render() {
   refreshSel();
   const r = compute();
   if (r.err) { $("res").innerHTML = `<span class="err">❌ ${esc(r.err)}</span>`; $("sim").innerHTML = ""; $("warn").innerHTML = ""; return; }
-  $("meRow").textContent = `Você — ${r.spd} SPD`;
-  $("warn").innerHTML = r.RL.other ? `<div class="warn">ℹ️ Avanços que envolvem outras unidades, ou disparados por AV, só entram na simulação; as ações garantidas consideram apenas os avanços de Você em Você.</div>` : "";
+  $("meRow").textContent = `${focusName()} — ${r.spd} SPD`;
+  $("warn").innerHTML = r.RL.other ? `<div class="warn">ℹ️ Avanços que envolvem outras unidades, ou disparados por AV, só entram na simulação; as ações garantidas consideram apenas os avanços do personagem foco nele mesmo.</div>` : "";
   const semAV = r.isAS && !r.hasAV; // Apocalyptic Shadow sem AV limite: só mostra o AV de cada ação
   const rows = semAV ? 8 : Math.min(20, Math.max(5, r.acts + 3));
   let t = "";
@@ -173,35 +194,55 @@ function render() {
   const al = readRows("al", "Aliado"), bad = al.find((u) => u.adv && u.adv.err);
   if (bad) { $("sim").innerHTML = `<span class="err">❌ ${esc(bad.name)}: ${esc(bad.adv.err)}</span>`; return; }
   if (r.von + al.reduce((a, u) => a + (u.adv ? u.adv.von : 0), 0) > 1) { $("sim").innerHTML = `<span class="err">❌ Vonwacq só pode estar equipado em 1 personagem.</span>`; return; }
-  const U = [{ name: "Você", spd: r.spd, k: 0, i: 0, slot: 0, S: r.S }];
+  const U = [{ name: focusName(), spd: r.spd, k: 0, i: 0, slot: 0, S: r.S }];
   al.forEach((u) => U.push({ name: u.name, spd: u.spd, k: 1, i: u.i, slot: u.i + 1, S: u.adv ? u.adv.S : 0 }));
-  readRows("in", "Inimigo").forEach((u) => U.push({ name: u.name, spd: u.spd, k: 2, i: u.i, slot: -1, S: 0 }));
+  readRows("in", "Inimigo").forEach((u) => U.push({ name: u.name, spd: u.spd, k: 2, i: u.i, slot: 10 + u.i, S: 0 }));
+  [...$("sm").querySelectorAll(".u")].forEach((d, i) => { const [a, b] = d.querySelectorAll("input"), ow = d.querySelector("select").value, v = Number(b.value); if (!(v > 0)) return; const o = ow === "" ? null : U.find((u) => u.slot === Number(ow)); if (ow !== "" && !o) return; U.push({ name: a.value.trim() || `Invocação ${i + 1}`, spd: o ? (o.spd * v) / 100 : v, k: 3, i, slot: 4 + i, S: 0, own: o ? o.slot : -1, pc: v }); });
+  U.forEach((u) => { u.base = u.spd; u.mods = []; });
   U.forEach((u) => { u.next = Math.max(0, 10000 - 100 * u.S) / u.spd; u.n = 0; });
-  const ign = r.RL.rules.filter((ru) => (ru.a !== -2 && !U.some((u) => u.slot === ru.a)) || !U.some((u) => u.slot === ru.t)).length;
+  const ign = r.RL.rules.filter((ru) => (ru.a !== -2 && !U.some((u) => u.slot === ru.a)) || (ru.t !== -3 && !U.some((u) => u.slot === ru.t))).length;
   const ev = [], avEv = [];
   r.RL.rules.forEach((ru) => { if (ru.avs) ru.avs.forEach((x) => avEv.push({ av: x, ru, done: false })); });
   avEv.sort((p, q) => p.av - q.av);
-  const fire = (ru, T, src) => { const t = U.find((u) => u.slot === ru.t); if (!t) return; t.next = Math.max(T, t.next - (100 * ru.pct) / t.spd); ev.push({ mark: true, av: T, text: `↳ ${src}: ${t.name} +${ru.pct}% → age em ${t.next.toFixed(1)} AV` }); };
+  const nm = unitNames(), xtra = new Map(), RI = [...$("rules").querySelectorAll(".rl")];
+  const chg = (t, T) => { const s = Math.max(1, t.base * (1 + t.mods.reduce((a, m) => a + m.p, 0) / 100)), rem = (t.next - T) * t.spd; t.spd = s; t.next = T + rem / s; U.forEach((m) => { if (m.own === t.slot) { m.base = (t.spd * m.pc) / 100; chg(m, T); } }); };
+  const fire = (ru, T, src) => {
+    const ts = ru.t === -3 ? U.filter((u) => u.slot >= 0 && u.slot <= 3) : U.filter((u) => u.slot === ru.t); if (!ts.length) return;
+    if (ru.pct) ts.forEach((t) => { t.next = Math.max(T, t.next - (100 * ru.pct) / t.spd); });
+    if (ru.spd && ru.spd.length) ts.forEach((t) => { ru.spd.forEach((m) => t.mods.push({ p: m.p, left: m.n || 1e9 })); chg(t, T); });
+    if (ru.extra) ts.forEach((t) => xtra.set(t, (xtra.get(t) || 0) + ru.extra));
+    const what = [ru.pct ? (ru.pct > 0 ? `+${ru.pct}%` : `atraso ${-ru.pct}%`) : "", ...(ru.spd || []).map((m) => `SPD ${m.p > 0 ? "+" : ""}${m.p}%${m.n ? " x" + m.n : ""}`), ru.extra ? `+${ru.extra} extra` : ""].filter(Boolean).join(" ");
+    ev.push({ mark: true, av: T, ri: RI.indexOf(ru.el), text: `↳ ${ru.o >= 0 ? nm[ru.o] : src}: ${what} > ${ru.t === -3 ? "time todo" : ts[0].name}${ru.t !== -3 && ru.pct ? ` (age em ${ts[0].next.toFixed(1)} AV)` : ""}` });
+  };
+  const flush = (T) => { xtra.forEach((k, u) => { for (let j = 1; j <= Math.min(k, 8); j++) ev.push({ av: T, who: u.name, n: u.n, k: u.k, i: u.i, x: j }); }); xtra.clear(); };
   let nAct = 0, guard = 0;
   while (nAct < 250 && guard++ < 3000) {
     let a = U[0]; for (const u of U) if (u.next < a.next - 1e-9) a = u;
     const pend = avEv.find((x) => !x.done && x.av < a.next - 1e-9 && x.av <= r.base + 1e-9);
-    if (pend) { pend.done = true; fire(pend.ru, pend.av, `no AV ${pend.av}`); continue; }
+    if (pend) { pend.done = true; fire(pend.ru, pend.av, `no AV ${pend.av}`); flush(pend.av); continue; }
     if (a.next > r.base + 1e-9) break;
     const T = a.next; a.n++; nAct++; ev.push({ av: T, who: a.name, n: a.n, k: a.k, i: a.i });
     a.next = T + 10000 / a.spd;
-    r.RL.rules.forEach((ru) => { if (ru.a === a.slot && (!ru.ns || ru.ns.has(a.n))) fire(ru, T, `${a.name} (${a.n}ª ação)`); });
+    if (a.mods.length) { a.mods.forEach((m) => m.left--); if (a.mods.some((m) => m.left <= 0)) { a.mods = a.mods.filter((m) => m.left > 0); chg(a, T); } }
+    const mine = (ru) => ru.a === a.slot && (!ru.ns || ru.ns.has(a.n)), src = `${a.name} (${a.n}ª ação)`;
+    r.RL.rules.forEach((ru) => { if (mine(ru) && ru.w === "d") fire(ru, T, src); });
+    flush(T);
+    r.RL.rules.forEach((ru) => { if (mine(ru) && ru.w !== "d") fire(ru, T, src); });
     avEv.forEach((x) => { if (!x.done && x.av <= T + 1e-9) { x.done = true; fire(x.ru, T, `no AV ${x.av}`); } });
+    flush(T);
   }
   const cyc = (av) => (r.isAS ? 0 : av <= r.M.first ? 0 : Math.ceil((av - r.M.first) / 100));
+  const lk = (e) => (e.k === 0 ? 0 : e.i + 1) + ":" + e.n;
+  const uc = (u) => (u.k === 0 ? "#2563eb" : u.k === 1 ? ["#16a34a", "#d97706", "#9333ea"][u.i] : u.k === 2 ? "#dc2626" : "#0891b2");
+  const tlHtml = `<div class="hint" style="margin-top:8px">Linha do tempo · 0 → ${r.base} AV</div>` + U.map((u) => `<div class="tlr"><span>${u.k === 2 ? "👾" : u.k === 3 ? "🔹" : ""}${esc(u.name)}</span><div class="bar">${ev.filter((e) => !e.mark && e.k === u.k && e.i === u.i).map((e) => `<i style="left:${Math.min(100, (e.av / r.base) * 100)}%;background:${uc(u)}" title="${e.av.toFixed(1)} AV"></i>`).join("")}</div></div>`).join("");
   let h = `<table><tr><th>AV</th><th>Unidade</th><th>Ação</th></tr>`, last = -1;
   ev.forEach((e) => {
-    if (e.mark) { h += `<tr class="mk"><td colspan="3">${esc(e.text)}</td></tr>`; return; }
+    if (e.mark) { h += `<tr class="mk"><td colspan="3">${esc(e.text)}${e.ri >= 0 ? ` <button class="pl med" type="button" data-ri="${e.ri}" title="editar este avanço">✎</button><button class="pl mrm" type="button" data-ri="${e.ri}" title="remover este avanço">×</button>` : ""}</td></tr>`; return; }
     const c = cyc(e.av);
-    if (c !== last) { h += `<tr class="cy"><td colspan="3">${r.isAS ? `Até ${r.base} AV${r.hasAV ? "" : " (alcance da simulação)"}` : `Ciclo ${c} · até ${c === 0 ? r.M.first : r.M.first + 100 * c} AV`}</td></tr>`; last = c; }
-    h += `<tr class="${e.k === 0 ? "me" : e.k === 2 ? "en" : "a" + e.i}"><td>${e.av.toFixed(1)}${r.isAS && e.k !== 2 ? ` <span class="pt">${Math.max(0, Math.round(2000 - e.av))} pts</span>` : ""}</td><td>${e.k === 2 ? "👾 " : ""}${esc(e.who)}</td><td>${e.n}ª${e.k !== 2 ? ` <button class="pl" type="button" data-s="${e.k === 0 ? 0 : e.i + 1}" data-n="${e.n}" title="adicionar um avanço nesta ação">＋</button>` : ""}</td></tr>`;
+    if (c !== last) { h += `<tr class="cy"><td colspan="3">${r.isAS ? `Até ${r.base} AV${r.hasAV ? "" : " (alcance da simulação)"}` : `${c + 1}º ciclo · até ${r.M.first + 100 * c} AV`}</td></tr>`; last = c; }
+    h += `<tr class="${e.k === 0 ? "me" : e.k === 2 ? "en" : e.k === 3 ? "sm" : "a" + e.i}"><td>${e.av.toFixed(1)}${r.isAS && e.k < 2 ? ` <span class="pt">${Math.max(0, Math.round(2000 - e.av))} pts</span>` : ""}</td><td>${e.k === 2 ? "👾 " : e.k === 3 ? "🔹 " : ""}${esc(e.who)}</td><td>${e.n}ª${e.x ? ` · extra ${e.x}` : ""}${e.k < 2 && !e.x ? ` <button class="pl" type="button" data-s="${e.k === 0 ? 0 : e.i + 1}" data-n="${e.n}" title="adicionar um avanço nesta ação">＋</button><button class="lb" type="button" data-k="${lk(e)}" title="rótulo: básico / skill / ult">${LBL[lk(e)] || "·"}</button>` : ""}</td></tr>`;
   });
-  $("sim").innerHTML = h + `</table>` + (ign ? `<div class="hint" style="margin-top:4px">⚠️ ${ign} regra(s) ignorada(s): a unidade não tem SPD preenchido.</div>` : "") + (r.isAS ? `<div class="hint" style="margin-top:4px">Contagem de 2000 AV por nó · pts = 2000 − AV.</div>` : "");
+  $("sim").innerHTML = h + `</table>` + tlHtml + (ign ? `<div class="hint" style="margin-top:4px">⚠️ ${ign} regra(s) ignorada(s): a unidade não tem SPD preenchido.</div>` : "") + (r.isAS ? `<div class="hint" style="margin-top:4px">Contagem de 2000 AV por nó · pts = 2000 − AV.</div>` : "");
 }
 
 // ---- inimigos vindos de uma wiki (opcional): enemies.json ao lado deste arquivo ----
@@ -220,10 +261,12 @@ $("dbadd").onclick = () => {
 fetch("enemies.json").then((r) => (r.ok ? r.json() : [])).then((d) => { DB = Array.isArray(d) ? d : []; fillDb(); }).catch(() => {});
 
 // atalhos de avanço
-["eagle", "ddd1", "ddd2", "ddd3", "ddd4", "ddd5", "eagle+ddd1", "eagle+ddd2", "eagle+ddd3", "eagle+ddd4", "eagle+ddd5"].forEach((p) => {
-  const b = document.createElement("button"); b.textContent = p; b.type = "button";
+const crow = [0, 1, 2].map(() => { const d = document.createElement("div"); d.className = "cr"; $("chips").appendChild(d); return d; });
+// linha 1: eagle e ddd1–5 · linha 2: eagle+ddd1–5 · linha 3: + regra
+[["eagle", "eagle", 0], ...[1, 2, 3, 4, 5].map((n) => [`ddd${n}`, `ddd${n}`, 0]), ...[1, 2, 3, 4, 5].map((n) => [`eagle+ddd${n}`, `eagle+${n}`, 1])].forEach(([p, lab, r]) => {
+  const b = document.createElement("button"); b.textContent = lab; b.title = p; b.type = "button";
   b.onclick = () => { const el = lastV && lastV.isConnected ? lastV : $("rules").querySelector(".v"); if (!el) return; el.value = (el.value.trim() ? el.value.trim() + "+" : "") + p; render(); };
-  $("chips").appendChild(b);
+  crow[r].appendChild(b);
 });
 const bv = document.createElement("button"); bv.textContent = "vonwacq"; bv.type = "button";
 bv.onclick = () => { $("ini").value = "vonwacq"; render(); }; $("chipsIni").appendChild(bv);
@@ -232,7 +275,7 @@ bg.onclick = () => { $("ini").value = "gmoj"; render(); }; $("chipsIni").appendC
 const li = document.createElement("button"); li.textContent = "limpar"; li.type = "button"; li.style.background = "var(--hint)";
 li.onclick = () => { $("ini").value = ""; render(); }; $("chipsIni").appendChild(li);
 const ar = document.createElement("button"); ar.textContent = "+ regra"; ar.type = "button";
-ar.onclick = () => { addRule(); render(); }; $("chips").prepend(ar);
+ar.onclick = () => { addRule(); render(); }; crow[2].appendChild(ar);
 
 // ---- regras de avanço: "quando [quem] agir (na ação nº) → avança [quem] em [valor]" ----
 // slots: 0 = Você, 1..3 = aliados (pela posição do campo)
@@ -241,69 +284,115 @@ function readRules() {
   const out = { rules: [], selfFw: [], other: false, err: null };
   const fwArr = Array(MAXF).fill(0);
   for (const d of $("rules").querySelectorAll(".rl")) {
-    const [qa, nn, tt, vv] = d.children, vtxt = vv.value.trim();
+    const g = (c) => d.querySelector("." + c), qa = g("q"), nn = g("n"), tt = g("t"), vv = g("v"), vtxt = vv.value.trim();
     if (!vtxt) continue;
     if (/vonwacq/i.test(vtxt)) return { err: "Vonwacq é avanço de início de luta: use o campo “início”." };
-    let pct = 0;
-    for (const t of vtxt.split(/[\s+]+/).filter(Boolean)) { const x = atom(t); if (x === null || x < 0) return { err: `Avanço inválido: ${t}` }; pct += x; }
-    if (qa.value !== "av" && qa.value !== tt.value && /eagle/i.test(vtxt)) return { err: "Eagle só avança quem o usa: só vale quando “quando” e “avança” são o mesmo personagem." };
+    let pct = 0, extra = 0; const spdm = [];
+    for (const t of vtxt.split(/[\s+]+/).filter(Boolean)) { const m = t.match(/^extra(\d+)?$/i); if (m) { extra += m[1] ? Number(m[1]) : 1; continue; } const sm = t.match(/^spd(-?\d+(?:\.\d+)?)(?:x(\d+))?$/i); if (sm) { spdm.push({ p: Number(sm[1]), n: sm[2] ? Number(sm[2]) : 0 }); continue; } const x = atom(t); if (x === null) return { err: `Avanço inválido: ${t}` }; pct += x; }
+    const og = g("o").value === "=" ? qa.value : g("o").value;
+    if (/eagle/i.test(vtxt) && (tt.value === "team" || (og !== "av" && og !== tt.value))) return { err: "Eagle só avança quem o usa: origem e alvo precisam ser o mesmo personagem." };
+    const T = tt.value === "team" ? -3 : Number(tt.value), O = g("o").value === "=" ? -1 : Number(g("o").value), W = g("w").value;
     const ntxt = nn.value.trim(); let ns = null;
     if (qa.value === "av") {
       const avs = ntxt.split(/[\s,;]+/).filter(Boolean).map(Number);
       if (!avs.length || avs.some((x) => !Number.isFinite(x) || x < 0)) return { err: "Informe o(s) AV da regra “No AV…” (ex.: 62.5 ou 62.5, 130)." };
-      out.rules.push({ a: -2, t: Number(tt.value), avs, pct }); out.other = true; continue;
+      out.rules.push({ a: -2, o: O, t: T, avs, pct, extra, spd: spdm, w: W, el: d }); out.other = true; continue;
     }
     if (ntxt && !/^(todas?|\*)$/i.test(ntxt)) { ns = new Set(); for (const p of ntxt.split(/[\s,]+/).filter(Boolean)) { const k = Number(p); if (!Number.isInteger(k) || k < 1) return { err: `Ação inválida: ${p}` }; ns.add(k); } }
-    const a = Number(qa.value), t = Number(tt.value);
-    out.rules.push({ a, t, ns, pct });
-    if (a === 0 && t === 0) { for (let k = 1; k <= MAXF; k++) if (!ns || ns.has(k)) fwArr[k - 1] += pct; } else out.other = true;
+    const a = Number(qa.value);
+    out.rules.push({ a, o: O, t: T, ns, pct, extra, spd: spdm, w: W, el: d });
+    if (a === 0 && (T === 0 || T === -3)) { for (let k = 1; k <= MAXF; k++) if (!ns || ns.has(k)) fwArr[k - 1] += pct; }
+    if (!(a === 0 && T === 0) || spdm.length) out.other = true;
   }
   let len = MAXF; while (len > 0 && fwArr[len - 1] === 0) len--;
   out.selfFw = fwArr.slice(0, len);
   return out;
 }
 function refreshSel(force) {
-  const names = ["Você", ...[...$("al").querySelectorAll(".u")].map((d, i) => d.querySelector("input").value.trim() || `Aliado ${i + 1}`)];
-  const key = names.join("\u0001"); if (!force && key === selKey) return; selKey = key;
-  $("rules").querySelectorAll("select").forEach((s) => { const cur = s.value || "0"; s.innerHTML = names.map((n, i) => `<option value="${i}">${s.className === "q" ? "Quando " + esc(n) + " agir" : "→ avança " + esc(n)}</option>`).join("") + (s.className === "q" ? '<option value="av">No AV…</option>' : ""); s.value = cur; });
+  const names = [focusName(), ...[...$("al").querySelectorAll(".u")].map((d, i) => d.querySelector("input").value.trim() || `Aliado ${i + 1}`)];
+  const en = enemyNames(), sn = sumNames(), key = names.join("\u0001") + "|" + en.join("\u0001") + "|" + sn.join("\u0001"); if (!force && key === selKey) return; selKey = key;
+  $("rules").querySelectorAll("select.q, select.o, select.t").forEach((s) => {
+    const c = s.className, cur = s.value || (c === "o" ? "=" : "0");
+    s.innerHTML = (c === "o" ? '<option value="=">Origem: quem agiu</option>' : "") + names.map((n, i) => `<option value="${i}">${c === "q" ? "Quando " + esc(n) + " agir" : c === "o" ? "Origem: " + esc(n) : "→ avança " + esc(n)}</option>`).join("") + (c === "q" ? '<option value="av">No AV…</option>' : "") + (c === "t" ? sn.map((n, i) => `<option value="${4 + i}">→ 🔹 ${esc(n)}</option>`).join("") + en.map((n, i) => `<option value="${10 + i}">→ 👾 ${esc(n)}</option>`).join("") + '<option value="team">→ avança o time todo</option>' : "");
+    s.value = cur;
+  });
 }
 function addRule() {
   const d = document.createElement("div"); d.className = "rl";
-  d.innerHTML = `<select class="q"></select><input class="n" placeholder="na ação nº (vazio = toda)" autocomplete="off"><select class="t"></select><input class="v" placeholder="valor: eagle+ddd5 ou 49" autocapitalize="off" autocomplete="off"><button type="button" class="rm" title="remover esta regra">×</button>`;
+  d.innerHTML = `<select class="q"></select><input class="n" placeholder="na ação nº (vazio = toda)" autocomplete="off"><select class="o"></select><select class="t"></select><select class="w"><option value="a">após o turno</option><option value="d">durante o turno</option></select><input class="v" placeholder="valor: ddd5, 49, extra4" autocapitalize="off" autocomplete="off"><button type="button" class="rm" title="remover esta regra">×</button>`;
   $("rules").appendChild(d); refreshSel(true); return d;
 }
-const ph = (d) => { d.children[1].placeholder = d.children[0].value === "av" ? "AV (ex.: 62.5 ou 62.5, 130)" : "na ação nº (vazio = toda)"; };
+const ph = (d) => { d.querySelector(".n").placeholder = d.querySelector(".q").value === "av" ? "AV (ex.: 62.5 ou 62.5, 130)" : "na ação nº (vazio = toda)"; };
 $("rules").addEventListener("input", render);
 $("rules").addEventListener("click", (e) => { const b = e.target.closest(".rm"); if (!b) return; b.closest(".rl").remove(); if (!$("rules").children.length) addRule(); render(); });
+// copiar link: guarda o setup inteiro (modo, foco, aliados, inimigos, regras) no endereço
+function snap() {
+  const rows = (id) => [...$(id).querySelectorAll(".u")].map((d) => [...d.querySelectorAll("input")].map((i) => i.value));
+  return { m: $("modo").value, c: $("ciclos").value, n: $("nome").value, s: $("spd").value, i: $("ini").value, a: rows("al"), e: rows("in"), r: [...$("rules").querySelectorAll(".rl")].map((d) => ["q", "n", "o", "t", "w", "v"].map((c) => d.querySelector("." + c).value)), z: [...$("sm").querySelectorAll(".u")].map((d) => [...d.querySelectorAll("input,select")].map((i) => i.value)), l: LBL };
+}
+function restore(o) {
+  if (o.m && MODES[o.m]) $("modo").value = o.m;
+  $("ciclos").value = o.c || ""; $("nome").value = o.n || ""; if (o.s) $("spd").value = o.s; $("ini").value = o.i || "";
+  const fill = (id, rs) => [...$(id).querySelectorAll(".u")].forEach((d, k) => [...d.querySelectorAll("input")].forEach((inp, j) => { inp.value = (rs && rs[k] && rs[k][j]) || ""; }));
+  fill("al", o.a); fill("in", o.e);
+  [...$("sm").querySelectorAll(".u")].forEach((d, k) => [...d.querySelectorAll("input,select")].forEach((inp, j) => { inp.value = (o.z && o.z[k] && o.z[k][j]) || ""; }));
+  Object.keys(LBL).forEach((k) => delete LBL[k]); Object.assign(LBL, o.l || {});
+  $("rules").innerHTML = "";
+  (o.r || []).forEach((r) => { const d = addRule(); ["q", "n", "o", "t", "w", "v"].forEach((c, j) => { d.querySelector("." + c).value = r[j]; }); ph(d); });
+}
+const b64 = () => btoa(unescape(encodeURIComponent(JSON.stringify(snap()))));
+const parseCode = (s) => { s = s.trim(); const m = s.match(/[?&]x=([^&\s]+)/); if (m) s = decodeURIComponent(m[1]); return JSON.parse(decodeURIComponent(escape(atob(s.replace(/^HSR1-/, ""))))); };
+const copyTxt = (txt, btn, ok, idle) => { (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => { btn.textContent = ok; setTimeout(() => { btn.textContent = idle; }, 2000); }).catch(() => { $("imp").value = txt; $("imp").focus(); $("imp").select(); btn.textContent = "Copie do campo abaixo"; setTimeout(() => { btn.textContent = idle; }, 3000); }); };
+$("share").onclick = () => copyTxt(location.origin + location.pathname + "?x=" + encodeURIComponent(b64()), $("share"), "✅ Link copiado", "🔗 Copiar link");
+$("shcode").onclick = () => copyTxt("HSR1-" + b64(), $("shcode"), "✅ Código copiado", "📋 Copiar código");
+$("impb").onclick = () => { try { restore(parseCode($("imp").value)); $("imp").value = ""; syncMode(); render(); $("impb").textContent = "✅ Importado"; } catch (e) { $("impb").textContent = "❌ Código inválido"; } setTimeout(() => { $("impb").textContent = "Importar"; }, 2000); };
+
 $("rules").addEventListener("change", (e) => { const d = e.target.closest(".rl"); if (d) ph(d); render(); });
 $("rules").addEventListener("focusin", (e) => { if (e.target.classList && e.target.classList.contains("v")) lastV = e.target; });
 
 // toque em ＋ numa ação da simulação: abre um mini-formulário na linha e cria a regra "quando [essa unidade] agir na ação nº N"
-const unitNames = () => ["Você", ...[...$("al").querySelectorAll(".u")].map((d, i) => d.querySelector("input").value.trim() || `Aliado ${i + 1}`)];
+const sumNames = () => [...$("sm").querySelectorAll(".u")].map((d, i) => d.querySelector("input").value.trim() || `Invocação ${i + 1}`);
+const enemyNames = () => [...$("in").querySelectorAll(".u")].map((d, i) => d.querySelector("input").value.trim() || `Inimigo ${i + 1}`);
+const unitNames = () => [focusName(), ...[...$("al").querySelectorAll(".u")].map((d, i) => d.querySelector("input").value.trim() || `Aliado ${i + 1}`)];
 $("sim").addEventListener("click", (e) => {
+  const lb = e.target.closest(".lb");
+  if (lb) { const O = ["", "B", "S", "U"], k = lb.dataset.k; LBL[k] = O[(O.indexOf(LBL[k] || "") + 1) % 4]; render(); return; }
+  const rm = e.target.closest(".mrm");
+  if (rm) { [...$("rules").querySelectorAll(".rl")][+rm.dataset.ri].remove(); if (!$("rules").children.length) addRule(); render(); return; }
+  const ec = e.target.closest(".ec");
+  if (ec) { const iv = ec.closest("tr.ed").querySelector(".ev"); iv.value = (iv.value.trim() ? iv.value.trim() + "+" : "") + ec.dataset.v; return; }
   const ok = e.target.closest(".okb");
   if (ok) {
     const ed = ok.closest("tr.ed"), b = ed.previousElementSibling && ed.previousElementSibling.querySelector(".pl");
-    const val = ed.querySelector("input").value.trim(), tgt = ed.querySelector("select").value;
-    if (val && b && /eagle/i.test(val) && tgt !== b.dataset.s) { ed.querySelector(".em").textContent = "Eagle só avança quem o usa (quem agiu)."; return; }
-    if (val && b) {
-      const d = [...$("rules").querySelectorAll(".rl")].find((x) => !x.children[3].value.trim()) || addRule();
-      d.children[0].value = b.dataset.s; d.children[1].value = b.dataset.n; d.children[2].value = tgt; d.children[3].value = val; ph(d);
+    const val = ed.querySelector(".ev").value.trim(), tgt = ed.querySelector(".et").value, org = ed.querySelector(".eo").value, ri = ed.dataset.ri;
+    const row = ri ? [...$("rules").querySelectorAll(".rl")][+ri] : null, trig = row ? row.querySelector(".q").value : b && b.dataset.s;
+    if (val && /eagle/i.test(val) && (tgt === "team" || (org === "=" ? trig : org) !== tgt)) { ed.querySelector(".em").textContent = "Eagle só avança quem o usa (origem = alvo)."; return; }
+    if (val && (row || b)) {
+      const d = row || [...$("rules").querySelectorAll(".rl")].find((x) => !x.querySelector(".v").value.trim()) || addRule(), g = (c) => d.querySelector("." + c);
+      if (!row) { g("q").value = b.dataset.s; g("n").value = b.dataset.n; }
+      g("o").value = org; g("t").value = tgt; g("w").value = ed.querySelector(".ew").value; g("v").value = val; ph(d);
     }
-    render(); return;
+    const s0 = b && b.dataset.s, n0 = b && b.dataset.n;
+    render();
+    if (ok.dataset.again && s0 !== undefined) { const nb = $("sim").querySelector(`.pl[data-s="${s0}"][data-n="${n0}"]`); if (nb) nb.click(); }
+    return;
   }
   const b = e.target.closest(".pl"); if (!b) return;
   const tr = b.closest("tr"), nx = tr.nextElementSibling;
   $("sim").querySelectorAll("tr.ed").forEach((x) => x.remove());
   if (nx && nx.classList.contains("ed")) return;
   const ed = document.createElement("tr"); ed.className = "ed";
-  ed.innerHTML = `<td colspan="3"><div class="rl" style="grid-template-columns:1fr 1fr auto"><select>${unitNames().map((n, i) => `<option value="${i}">→ avança ${esc(n)}</option>`).join("")}</select><input placeholder="eagle+ddd5 ou 49" autocapitalize="off" autocomplete="off"><button type="button" class="pl okb">OK</button><div class="em err" style="grid-column:1/-1;font-size:11px"></div></div></td>`;
-  tr.after(ed); ed.querySelector("input").focus();
+  const nmx = unitNames();
+  ed.innerHTML = `<td colspan="3"><div class="rl" style="grid-template-columns:1fr 1fr"><select class="eo"><option value="=">Origem: quem agiu</option>${nmx.map((n, i) => `<option value="${i}">Origem: ${esc(n)}</option>`).join("")}</select><select class="et">${nmx.map((n, i) => `<option value="${i}">→ avança ${esc(n)}</option>`).join("")}${sumNames().map((n, i) => `<option value="${4 + i}">→ 🔹 ${esc(n)}</option>`).join("")}${enemyNames().map((n, i) => `<option value="${10 + i}">→ 👾 ${esc(n)}</option>`).join("")}<option value="team">→ avança o time todo</option></select><select class="ew"><option value="a">após o turno</option><option value="d">durante o turno</option></select><input class="ev" placeholder="ddd5, 49, -20, spd20x2, extra4" autocapitalize="off" autocomplete="off"><div class="cr" style="grid-column:1/-1">${["eagle", "ddd1", "ddd2", "ddd3", "ddd4", "ddd5"].map((v) => `<button type="button" class="ec" data-v="${v}">${v}</button>`).join("")}</div><button type="button" class="pl okb" style="margin:0;padding:4px">OK</button><button type="button" class="pl okb" data-again="1" style="margin:0;padding:4px">OK + outro</button><div class="em err" style="grid-column:1/-1;font-size:11px"></div></div></td>`;
+  tr.after(ed); ed.querySelector(".ev").focus();
+  if (e.target.closest(".med")) { const md = e.target.closest(".med"), row = [...$("rules").querySelectorAll(".rl")][+md.dataset.ri], g = (c) => row.querySelector("." + c); ed.dataset.ri = md.dataset.ri; ed.querySelector(".eo").value = g("o").value; ed.querySelector(".et").value = g("t").value; ed.querySelector(".ew").value = g("w").value; ed.querySelector(".ev").value = g("v").value; }
 });
 $("sim").addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.closest("tr.ed")) { e.preventDefault(); e.target.closest("tr.ed").querySelector(".okb").click(); } });
 
 mkRows("al", 3, "Aliado", [], true);
 mkRows("in", 5, "Inimigo", []);
+for (let i = 0; i < 2; i++) { const d = document.createElement("div"); d.className = "u"; d.innerHTML = `<input placeholder="Invocação ${i + 1}" maxlength="20" autocomplete="off"><input type="number" inputmode="decimal" min="1" step="any" placeholder="SPD ou %"><select><option value="">sem dono</option><option value="0">dono: foco</option><option value="1">dono: aliado 1</option><option value="2">dono: aliado 2</option><option value="3">dono: aliado 3</option></select>`; $("sm").appendChild(d); }
+$("sm").addEventListener("input", render); $("sm").addEventListener("change", render);
 
 // pré-preenchimento: ?m=moc&s=160&c=1&f=vonwacq,2eagle  ou  start_param do Mini App: moc_160_1_vonwacq-2eagle (p = "+")
 (function init() {
@@ -312,6 +401,7 @@ mkRows("in", 5, "Inimigo", []);
   if (sp && !s) { const [a, b, d, e, g] = sp.split("_"); m = a; s = b; c = d; ii = g ? g.split("-").join(",") : ""; f = e ? e.replace(/p/g, "+").split("-").join(",") : ""; }
   if (m && MODES[m]) $("modo").value = m;
   if (s) $("spd").value = s;
+  if (q.get("n")) $("nome").value = q.get("n").slice(0, 20);
   if (c) $("ciclos").value = c;
   // links antigos do bot traziam vonwacq junto dos avanços: move pro campo de início
   let fl = f ? f.split(",").filter(Boolean) : [], il = ii ? ii.split(",").filter(Boolean) : [];
@@ -320,13 +410,21 @@ mkRows("in", 5, "Inimigo", []);
   // avanços de links antigos (sequência de ações de Você) viram regras "Você → Você"; ações com o mesmo valor ficam na mesma regra
   const seq = fl.flatMap(tok), grp = new Map();
   seq.forEach((v, k) => { if (!grp.has(v)) grp.set(v, []); grp.get(v).push(k + 1); });
-  grp.forEach((ns, v) => { const d = addRule(); d.children[1].value = ns.join(","); d.children[3].value = String(v); });
+  grp.forEach((ns, v) => { const d = addRule(); d.querySelector(".n").value = ns.join(","); d.querySelector(".v").value = String(v); });
+  const X = q.get("x"); if (X) { try { restore(JSON.parse(decodeURIComponent(escape(atob(X))))); } catch (e) {} }
 })();
-["modo", "spd", "ciclos", "ini"].forEach((id) => $(id).addEventListener("input", render));
+["modo", "spd", "ciclos", "ini", "nome"].forEach((id) => $(id).addEventListener("input", render));
 function syncMode() { const as = $("modo").value === "as"; $("clab").textContent = as ? "AV limite" : "Ciclos"; $("ciclos").placeholder = as ? "AV" : "1º"; }
-$("modo").addEventListener("change", () => { syncMode(); fillDb(); });
+$("modo").addEventListener("change", () => { const was = $("clab").textContent === "AV limite"; syncMode(); if (was !== ($("modo").value === "as")) $("ciclos").value = ""; fillDb(); render(); });
 $("vg").addEventListener("click", (e) => { if (tg && tg.openTelegramLink) { e.preventDefault(); tg.openTelegramLink("https://t.me/StarRailBR"); } });
 if (!$("rules").children.length) addRule();
+// salvar setups no aparelho
+const SK = "hsrvel.setups", getS = () => { try { return JSON.parse(localStorage.getItem(SK)) || {}; } catch (e) { return {}; } }, putS = (o) => { try { localStorage.setItem(SK, JSON.stringify(o)); } catch (e) {} };
+const fillS = () => { $("sv").innerHTML = Object.keys(getS()).map((k) => `<option>${esc(k)}</option>`).join("") || "<option value=''>(nenhum salvo)</option>"; };
+$("svs").onclick = () => { const n = (prompt("Nome do setup:", $("sv").value) || "").trim(); if (!n) return; const o = getS(); o[n] = snap(); putS(o); fillS(); $("sv").value = n; };
+$("svl").onclick = () => { const o = getS()[$("sv").value]; if (o) { restore(o); syncMode(); render(); } };
+$("svd").onclick = () => { const o = getS(); delete o[$("sv").value]; putS(o); fillS(); };
+fillS();
 syncMode();
 render();
 </script>
