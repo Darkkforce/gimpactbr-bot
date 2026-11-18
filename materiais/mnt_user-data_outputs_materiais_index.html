@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Materiais — Genshin</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{--bg:var(--tg-theme-bg-color,#14131f);--sf:var(--tg-theme-secondary-bg-color,#1e1c2e);--tx:var(--tg-theme-text-color,#ecebf5);--hint:var(--tg-theme-hint-color,#9a97b5);--ac:var(--tg-theme-button-color,#8b7cf6);--act:var(--tg-theme-button-text-color,#fff)}
+@media (prefers-color-scheme:light){:root{--bg:var(--tg-theme-bg-color,#fff);--sf:var(--tg-theme-secondary-bg-color,#f1f0f8);--tx:var(--tg-theme-text-color,#1b1a2b);--hint:var(--tg-theme-hint-color,#6b6985);--ac:var(--tg-theme-button-color,#5b4bd6)}}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:calc(env(safe-area-inset-top,0px) + 20px) 16px calc(env(safe-area-inset-bottom,0px) + 24px)}
+main{max-width:520px;margin:0 auto}
+h1{font-size:1.4rem;margin:0 0 4px}h2{font-size:1rem;margin:0 0 8px}.sub,.hint{color:var(--hint);font-size:.88rem}.sub{margin:0 0 16px}
+section{background:var(--sf);border-radius:16px;padding:14px;margin-bottom:12px}
+input,select,button{font:inherit;color:var(--tx)}
+input,select{width:100%;padding:10px;border-radius:10px;border:0;background:var(--bg)}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--ac)}
+.res{display:grid;gap:6px;margin-top:8px}
+.pick{text-align:left;padding:10px 12px;border:0;border-radius:10px;background:var(--bg);cursor:pointer}
+.chosen{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:600}
+.x{border:0;background:none;color:var(--hint);font-size:1.2rem;cursor:pointer;padding:4px 8px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;margin-top:10px}
+.grid label{font-size:.8rem;color:var(--hint);display:block;margin-bottom:2px}
+.cap{grid-column:1/-1;font-size:.8rem;color:var(--hint);margin-top:4px}
+ul{list-style:none;margin:8px 0 0;padding:0}li{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid color-mix(in srgb,var(--hint) 25%,transparent)}
+li:last-child{border:0}.d{color:var(--hint);font-size:.8rem}.q{font-weight:700;white-space:nowrap}
+.err{color:#e5484d}.err button{margin-top:8px;padding:8px 14px;border:0;border-radius:10px;background:var(--ac);color:var(--act)}
+</style>
+</head>
+<body>
+<main>
+<h1>Planejador de materiais</h1>
+<p class="sub">Ascensão e talentos do personagem, mais a ascensão de uma arma. Escolha só um dos dois se quiser.</p>
+<div id="st" class="hint">Carregando personagens e armas…</div>
+
+<section id="sc" hidden><h2>Personagem</h2><div id="pc"></div></section>
+<section id="sw" hidden><h2>Arma</h2><div id="pw"></div></section>
+<section id="so" hidden><h2>Total necessário</h2><div id="out" class="hint">Escolha um personagem ou uma arma.</div></section>
+</main>
+<script>
+const tg = window.Telegram && Telegram.WebApp;
+if (tg) { tg.ready(); tg.expand(); if (tg.BackButton) { tg.BackButton.show(); tg.BackButton.onClick(() => { location.href = "../"; }); } }
+const API = "https://gi.yatta.moe/api/v2/pt/", APIEN = "https://gi.yatta.moe/api/v2/en/";
+const TM = [1, 3, 5, 6, 8, 9, 10];      // nível máx. de talento por fase de ascensão (igual ao bot)
+const DIAS = { monday: "Seg", tuesday: "Ter", wednesday: "Qua", thursday: "Qui", friday: "Sex", saturday: "Sáb", sunday: "Dom" };
+const $ = (id) => document.getElementById(id);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const norm = (s) => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const j = async (base, p) => { const r = await fetch(base + p); if (!r.ok) throw new Error(r.status); return (await r.json()).data; };
+
+let IDX = { c: [], w: [] }, C = null, W = null;
+const S = { lc: 0, lt: 0, na: [1, 1], sk: [1, 1], bu: [1, 1], wc: 0, wt: 0 };
+const matCache = new Map();
+
+// estados de nível a partir de upgrade.promote (mesmo algoritmo do bot: "70" e "70/80")
+function states(promote) {
+  const arr = [...(promote || [])].sort((a, b) => a.promoteLevel - b.promoteLevel), out = [{ d: "1", phase: 0 }]; let prev = 1;
+  for (const t of arr) {
+    if (t.promoteLevel === 0) { out.push({ d: String(t.unlockMaxLevel), phase: 0 }); prev = t.unlockMaxLevel; continue; }
+    out.push({ d: prev + "/" + t.unlockMaxLevel, phase: t.promoteLevel }, { d: String(t.unlockMaxLevel), phase: t.promoteLevel }); prev = t.unlockMaxLevel;
+  }
+  return out;
+}
+function talents(data) {   // 3 talentos que gastam material: ataque básico, habilidade, explosão
+  const o = data.talent || data.talents || {};
+  const e = Object.entries(o).map(([k, v]) => ({ k: +k, p: v && v.promote || {} })).filter((t) => Object.values(t.p).some((p) => p && p.costItems)).sort((a, b) => a.k - b.k);
+  return e.slice(0, 3).map((t) => t.p);
+}
+function add(map, items) { for (const [id, q] of Object.entries(items || {})) map.set(id, (map.get(id) || 0) + q); }
+function ascCost(promote, from, to, tot) {
+  let mora = 0;
+  for (const p of promote || []) if (p.promoteLevel > from && p.promoteLevel <= to) { add(tot, p.costItems); mora += p.coinCost || 0; }
+  return mora;
+}
+function talCost(pr, from, to, tot) {
+  let mora = 0;
+  for (let l = from + 1; l <= to; l++) { const e = pr && pr[String(l)]; if (e) { add(tot, e.costItems); mora += e.coinCost || 0; } }
+  return mora;
+}
+function normalize() {
+  if (C) {
+    S.lt = Math.max(S.lt, S.lc);
+    const cm = TM[C.st[S.lc].phase], tm = TM[C.st[S.lt].phase];
+    for (const k of ["na", "sk", "bu"]) { S[k][0] = clamp(S[k][0], 1, cm); S[k][1] = clamp(S[k][1], S[k][0], tm); }
+  }
+  if (W) S.wt = Math.max(S.wt, S.wc);
+}
+const opts = (list, sel) => list.map(([v, t]) => `<option value="${v}"${v === sel ? " selected" : ""}>${esc(t)}</option>`).join("");
+const range = (a, b) => { const r = []; for (let i = a; i <= b; i++) r.push([i, "Nv. " + i]); return r; };
+const lvls = (st, from) => st.map((s, i) => [i, s.d]).slice(from);
+
+function drawChar() {
+  if (!C) { $("pc").innerHTML = `<input id="qc" placeholder="Buscar personagem…" autocomplete="off"><div id="rc" class="res"></div>`; return; }
+  const cm = TM[C.st[S.lc].phase], tm = TM[C.st[S.lt].phase];
+  const tl = [["na", "Ataque normal"], ["sk", "Habilidade"], ["bu", "Explosão"]];
+  $("pc").innerHTML = `<div class="chosen"><span>${esc(C.name)}</span><button class="x" data-clear="c" aria-label="Trocar personagem">✕</button></div>
+  <div class="grid"><div><label>Nível atual</label><select data-k="lc">${opts(lvls(C.st, 0), S.lc)}</select></div>
+  <div><label>Nível alvo</label><select data-k="lt">${opts(lvls(C.st, S.lc), S.lt)}</select></div>
+  ${tl.map(([k, n]) => `<div><label>${n} atual</label><select data-k="${k}0">${opts(range(1, cm), S[k][0])}</select></div>
+  <div><label>${n} alvo</label><select data-k="${k}1">${opts(range(S[k][0], tm), S[k][1])}</select></div>`).join("")}
+  <div class="cap">O nível máximo de talento depende da ascensão alcançada.</div></div>`;
+}
+function drawWeapon() {
+  if (!W) { $("pw").innerHTML = `<input id="qw" placeholder="Buscar arma…" autocomplete="off"><div id="rw" class="res"></div>`; return; }
+  $("pw").innerHTML = `<div class="chosen"><span>${esc(W.name)}</span><button class="x" data-clear="w" aria-label="Trocar arma">✕</button></div>
+  <div class="grid"><div><label>Nível atual</label><select data-k="wc">${opts(lvls(W.st, 0), S.wc)}</select></div>
+  <div><label>Nível alvo</label><select data-k="wt">${opts(lvls(W.st, S.wc), S.wt)}</select></div></div>`;
+}
+let tok = 0;
+async function drawOut() {
+  const my = ++tok, tot = new Map(); let mora = 0;
+  if (C) {
+    mora += ascCost(C.data.upgrade && C.data.upgrade.promote, C.st[S.lc].phase, C.st[S.lt].phase, tot);
+    talents(C.data).forEach((p, i) => { const k = ["na", "sk", "bu"][i]; mora += talCost(p, S[k][0], S[k][1], tot); });
+  }
+  if (W) mora += ascCost(W.data.upgrade && W.data.upgrade.promote, W.st[S.wc].phase, W.st[S.wt].phase, tot);
+  $("so").hidden = !(C || W);
+  if (!(C || W)) return;
+  const ids = [...tot.keys()];
+  await Promise.all(ids.map(async (id) => {
+    if (matCache.has(id)) return;
+    try {
+      const d = await j(API, "material/" + id), dias = [...new Set((d.source || []).map((s) => (s.days || []).map((x) => DIAS[String(x).toLowerCase()] || x).join("/")).filter(Boolean))].join(" / ");
+      matCache.set(id, { n: d.name, d: dias });
+    } catch (e) { matCache.set(id, { n: "Item #" + id, d: "" }); }
+  }));
+  if (my !== tok) return;
+  const rows = ids.map((id) => { const m = matCache.get(id); return `<li><span>${esc(m.n)} ${m.d ? `<span class="d">(${esc(m.d)})</span>` : ""}</span><span class="q">× ${tot.get(id).toLocaleString("pt-BR")}</span></li>`; });
+  if (mora) rows.push(`<li><span>Mora</span><span class="q">× ${mora.toLocaleString("pt-BR")}</span></li>`);
+  $("out").className = ""; $("out").innerHTML = rows.length ? `<ul>${rows.join("")}</ul>` : `<span class="hint">Nenhum material necessário — atual e alvo são iguais.</span>`;
+}
+function redraw() { normalize(); drawChar(); drawWeapon(); drawOut(); }
+
+function search(kind, q) {
+  const box = $(kind === "c" ? "rc" : "rw"), n = norm(q).trim();
+  box.innerHTML = n ? IDX[kind].filter((i) => norm(i.n).includes(n) || norm(i.en).includes(n)).slice(0, 8).map((i) => `<button class="pick" data-pick="${kind}:${i.id}">${esc(i.n)}</button>`).join("") : "";
+}
+async function pick(kind, id) {
+  const box = $(kind === "c" ? "rc" : "rw"); box.innerHTML = `<span class="hint">Carregando…</span>`;
+  try {
+    const data = await j(API, (kind === "c" ? "avatar/" : "weapon/") + id), it = IDX[kind].find((x) => String(x.id) === String(id));
+    const o = { data, name: (it && it.n) || data.name, st: states(data.upgrade && data.upgrade.promote) };
+    if (kind === "c") { C = o; S.lc = S.lt = 0; S.na = [1, 1]; S.sk = [1, 1]; S.bu = [1, 1]; } else { W = o; S.wc = S.wt = 0; }
+    redraw();
+  } catch (e) { box.innerHTML = `<span class="err">Falha ao carregar. Tente de novo.</span>`; }
+}
+document.addEventListener("input", (e) => { if (e.target.id === "qc") search("c", e.target.value); if (e.target.id === "qw") search("w", e.target.value); });
+document.addEventListener("click", (e) => {
+  const p = e.target.closest("[data-pick]"), x = e.target.closest("[data-clear]");
+  if (p) { const [k, id] = p.dataset.pick.split(":"); pick(k, id); }
+  if (x) { if (x.dataset.clear === "c") C = null; else W = null; redraw(); }
+});
+document.addEventListener("change", (e) => {
+  const k = e.target.dataset && e.target.dataset.k; if (!k) return; const v = +e.target.value;
+  if (k === "lc") S.lc = v; else if (k === "lt") S.lt = v; else if (k === "wc") S.wc = v; else if (k === "wt") S.wt = v;
+  else S[k.slice(0, 2)][+k[2]] = v;
+  if (k === "lc") { S.lt = Math.max(S.lt, v); }
+  redraw();
+});
+
+async function boot() {
+  $("st").className = "hint"; $("st").textContent = "Carregando personagens e armas…";
+  try {
+    const [cp, wp, ce, we] = await Promise.all([j(API, "avatar"), j(API, "weapon"), j(APIEN, "avatar"), j(APIEN, "weapon")]);
+    const mk = (pt, en) => { const e = new Map(Object.values(en.items || {}).map((i) => [i.id, i.name])); return Object.values(pt.items || {}).map((i) => ({ id: i.id, n: i.name, en: e.get(i.id) || "" })); };
+    IDX = { c: mk(cp, ce), w: mk(wp, we) };
+    $("st").hidden = true; $("sc").hidden = false; $("sw").hidden = false; redraw();
+    const q = new URLSearchParams(location.search);       // ?c=<id>&w=<id>
+    if (q.get("c")) await pick("c", q.get("c"));
+    if (q.get("w")) await pick("w", q.get("w"));
+  } catch (e) {
+    $("st").className = "err"; $("st").innerHTML = `Não consegui carregar os dados do Ambr (gi.yatta.moe).<br><button id="rt">Tentar de novo</button>`;
+    $("rt").onclick = boot;
+  }
+}
+boot();
+</script>
+</body>
+</html>
