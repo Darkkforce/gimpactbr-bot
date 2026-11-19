@@ -73,7 +73,7 @@ function genshinChar(c) {
     `<div class="g">${g.map(([k, v]) => `<div><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join("")}</div>${c.artifacts.map(artifact).join("")}</div>`;
 }
 function hsrChar(c) {
-  if (c.noDetail || !c.stats) return `<div class="in m">Detalhes deste personagem indisponíveis no momento.</div>`;
+  if (c.noDetail || !c.stats) return `<div class="in m">Detalhes deste personagem indisponíveis no momento.${c.detailError ? `<br><small>Motivo: ${esc(c.detailError)}</small>` : ""}</div>`;
   const lc = c.lightCone;
   return `<div class="in">` +
     (lc ? `<div class="card row2" style="margin:8px 0">${lc.icon ? `<img class="wi big" src="${esc(lc.icon)}" alt="" width="52" height="52" loading="lazy" onerror="this.style.display='none'">` : ""}<div><b>${esc(lc.name)}</b> ${stars(lc.rarity)}<br><span class="m">Nv. ${lc.level} · S${lc.superimpose} · HP ${lc.hp} · ATQ ${lc.atk} · DEF ${lc.def}</span></div></div>` : `<div class="m" style="margin:6px 0">Sem cone de luz equipado.</div>`) +
