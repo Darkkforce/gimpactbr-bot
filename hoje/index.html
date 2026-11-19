@@ -66,6 +66,28 @@ async function get(url) {
 }
 const calUrl = (g) => "https://api.ennead.cc/mihoyo/" + GAMES[g].cal + "/calendar?lang=pt-pt";
 const codeUrl = (g) => "https://hoyo-codes.seria.moe/codes?game=" + GAMES[g].code;
+// Códigos: a API principal pode bloquear o navegador (CORS). Tenta, em ordem: ela mesma, o endpoint de códigos do
+// ennead (mesmo servidor que já serve os eventos) e dois proxies CORS públicos (só pra ler dado público).
+const PROXY = [(u) => "https://api.allorigins.win/raw?url=" + encodeURIComponent(u), (u) => "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(u)];
+async function raw(url) {
+  const c = new AbortController(), id = setTimeout(() => c.abort(), 7000);
+  try { const r = await fetch(url, { signal: c.signal }); if (!r.ok) throw new Error("HTTP " + r.status); return await r.json(); }
+  finally { clearTimeout(id); }
+}
+function normCodes(d) {
+  const a = Array.isArray(d) ? d : (d && (d.codes || d.active));
+  if (!Array.isArray(a)) return null;
+  return a.map((c) => ({ code: c.code, status: c.status, rewards: Array.isArray(c.rewards) ? c.rewards.join(", ") : c.rewards })).filter((c) => c.code && (c.status === undefined || c.status === "OK"));
+}
+async function getCodes(g) {
+  const key = "codes:" + g, hit = cache.get(key); if (hit && Date.now() - hit.t < TTL) return hit;
+  const main = codeUrl(g), alt = "https://api.ennead.cc/mihoyo/" + GAMES[g].cal + "/codes", falhas = [];
+  for (const [nome, url] of [["hoyo-codes", main], ["ennead", alt], ["proxy 1", PROXY[0](main)], ["proxy 2", PROXY[1](main)]]) {
+    try { const l = normCodes(await raw(url)); if (l) { const o = { t: Date.now(), d: l, src: nome }; cache.set(key, o); return o; } falhas.push(nome + ": resposta sem lista"); }
+    catch (e) { falhas.push(nome + ": " + (e.name === "AbortError" ? "tempo esgotado" : e.message)); }
+  }
+  throw new Error(falhas.join(" · "));
+}
 
 function items(b) { const a = [...(b.characters || []), ...(b.weapons || []), ...(b.light_cones || [])].sort((x, y) => (y.rarity || 0) - (x.rarity || 0)); return a.map((i) => (i.rarity >= 5 ? `<span class="s5">${esc(i.name)}</span>` : esc(i.name)) + ` (${esc(i.rarity)}★)`).join(", ") || "(sem detalhe de itens)"; }
 function card(x, now, up, extra) {
@@ -96,7 +118,7 @@ function viewBanners(cal) {
   return sec("Ativos agora", act.map((b) => card(b, now, false))) + sec("Próximos", nxt.map((b) => card(b, now, true))) || `<div class="m">Nenhum banner ativo ou próximo encontrado.</div>`;
 }
 function viewCodigos(d) {
-  const list = (d.codes || []).filter((c) => c.status === "OK");
+  const list = d;
   const link = `<a class="lnk" href="${GAMES[G].url}" data-ext>Resgatar no site oficial ↗</a>`;
   if (!list.length) return `<div class="m">Nenhum código ativo agora.</div>${link}`;
   return list.map((c) => `<div class="card"><div class="code"><code>${esc(c.code)}</code><button class="cp" data-cp="${esc(c.code)}">Copiar</button></div><div class="m">${esc(clean(String(c.rewards || "")))}</div></div>`).join("") + link
@@ -110,14 +132,14 @@ async function render() {
   if (T === "banners" && !GAMES[G].ban) { $("out").innerHTML = `<div class="m">A fonte não traz banners de Zenless Zone Zero.</div>`; $("up").textContent = ""; return; }
   $("out").innerHTML = `<div class="m">Carregando…</div>`;
   try {
-    const r = await get(T === "codigos" ? codeUrl(G) : calUrl(G));
+    const r = T === "codigos" ? await getCodes(G) : await get(calUrl(G));
     if (my !== tok) return;
     $("out").innerHTML = T === "eventos" ? viewEventos(r.d) : T === "banners" ? viewBanners(r.d) : viewCodigos(r.d);
-    $("up").textContent = "Atualizado às " + new Date(r.t).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) + " · horários de Brasília, podem variar 1–2h (fonte: HoYoLAB)";
+    $("up").textContent = "Atualizado às " + new Date(r.t).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) + " · horários de Brasília, podem variar 1–2h (fonte: HoYoLAB)" + (r.src && r.src !== "hoyo-codes" ? " · códigos via " + r.src : "");
   } catch (e) {
     if (my !== tok) return;
     $("up").textContent = "";
-    $("out").innerHTML = `<div class="err">Não consegui carregar agora.<br><button id="rt">Tentar de novo</button></div>`;
+    $("out").innerHTML = `<div class="err">Não consegui carregar agora.<br><button id="rt">Tentar de novo</button></div><div class="m" style="margin-top:8px">${esc(e && e.message)}</div>`;
     $("rt").onclick = () => { cache.clear(); render(); };
   }
 }
