@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diagnóstico — Enka e VM</title>
+<style>
+:root{color-scheme:light dark}
+body{font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;margin:0;padding:20px 16px 40px}
+main{max-width:620px;margin:0 auto}
+h1{font-size:1.3rem;margin:0 0 4px}h2{font-size:1rem;margin:22px 0 8px}
+.sub{opacity:.7;margin:0 0 12px;font-size:.9rem}
+.t{display:grid;grid-template-columns:28px 1fr;gap:2px 8px;padding:10px 12px;margin-bottom:8px;border-radius:12px;background:rgba(128,128,128,.14)}
+.t b{grid-column:2}.t small{grid-column:2;opacity:.75;word-break:break-all}
+button,input{font:inherit;padding:9px 12px;border-radius:10px;border:1px solid rgba(128,128,128,.5);background:transparent;color:inherit}
+input{width:100%;margin-bottom:8px}button{cursor:pointer}
+code{font-size:.85em}
+</style>
+</head>
+<body>
+<main>
+<h1>Diagnóstico</h1>
+<p class="sub" id="env"></p>
+
+<h2>1. Enka Network (perfil de Genshin e Star Rail)</h2>
+<div id="enka"></div>
+
+<h2>2. Servidor da VM (para contadores e timers)</h2>
+<p class="sub">Cole o endereço https que o mini servidor de teste mostrou (ex.: <code>https://algo.trycloudflare.com</code>).</p>
+<input id="vm" placeholder="https://..." inputmode="url" autocomplete="off" autocapitalize="off">
+<button id="vmgo">Testar a VM</button>
+<div id="vmout" style="margin-top:10px"></div>
+
+<p style="margin-top:20px"><button id="again">Rodar os testes da Enka de novo</button></p>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+$("env").textContent = "Navegador: " + navigator.userAgent.slice(0, 110);
+
+// Diferença que importa: "Failed to fetch" = o navegador bloqueou (CORS) ou não há rede; qualquer HTTP status = liberado.
+async function probe(url, opts) {
+  const c = new AbortController(), id = setTimeout(() => c.abort(), 12000), t0 = performance.now();
+  try {
+    const r = await fetch(url, { ...(opts || {}), signal: c.signal });
+    return { ok: true, status: r.status, ms: Math.round(performance.now() - t0) };
+  } catch (e) {
+    return { ok: false, err: e.name === "AbortError" ? "tempo esgotado (12s)" : String(e.message || e), ms: Math.round(performance.now() - t0) };
+  } finally { clearTimeout(id); }
+}
+function row(title, url, r, okMsg) {
+  const lib = r.ok ? `liberado (HTTP ${r.status}, ${r.ms} ms)` : "BLOQUEADO ou sem resposta: " + r.err;
+  const good = r.ok && r.status >= 200 && r.status < 500 && r.status !== 429 ? "✅" : r.ok ? "⚠️" : "❌";
+  return `<div class="t"><span>${good}</span><b>${esc(title)}</b><small>${esc(lib)}${r.ok && r.status === 200 && okMsg ? " — " + esc(okMsg) : ""}</small><small>${esc(url)}</small></div>`;
+}
+async function enka() {
+  $("enka").innerHTML = "Testando…";
+  const tests = [
+    ["Enka — Genshin (perfil por UID)", "https://enka.network/api/uid/618285856?info"],
+    ["Enka — Star Rail (perfil por UID)", "https://enka.network/api/hsr/uid/800069903"],
+    ["Enka — dicionário de personagens (GitHub)", "https://raw.githubusercontent.com/EnkaNetwork/API-docs/master/store/characters.json"],
+  ];
+  const res = await Promise.all(tests.map(([, u]) => probe(u)));
+  $("enka").innerHTML = tests.map(([t, u], i) => row(t, u, res[i])).join("") +
+    `<p class="sub">✅ = o navegador consegue ler a resposta (dá pra montar o perfil sem servidor). ❌ = bloqueado: o bot teria que fazer a consulta. ⚠️ = o site respondeu com erro/limite (ex.: 429), mas isso não é bloqueio.</p>`;
+}
+async function vm() {
+  let u = $("vm").value.trim().replace(/\/+$/, "");
+  if (!/^https:\/\//i.test(u)) { $("vmout").innerHTML = `<div class="t"><span>⚠️</span><b>Use um endereço que comece com https://</b></div>`; return; }
+  $("vmout").textContent = "Testando…";
+  const a = await probe(u + "/ping");
+  let extra = "";
+  if (a.ok && a.status === 200) {
+    const b = await probe(u + "/ping", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });   // exige preflight CORS
+    extra = row("POST com JSON (é o que os contadores usariam)", u + "/ping", b);
+  }
+  $("vmout").innerHTML = row("GET /ping na VM", u + "/ping", a, "a VM responde por HTTPS a partir do navegador") + extra;
+}
+$("again").onclick = enka; $("vmgo").onclick = vm;
+enka();
+</script>
+</body>
+</html>
