@@ -32,7 +32,9 @@ details.ch summary img{border-radius:50%;background:color-mix(in srgb,var(--hint
 .wi.big{width:52px;height:52px}
 .row2{display:flex;gap:10px;align-items:center}
 details.ch summary .txt{flex:1;min-width:0}
-.art{border-top:1px solid color-mix(in srgb,var(--hint) 25%,transparent);padding:6px 0;font-size:.85rem}
+.art{display:flex;gap:10px;align-items:center;border-top:1px solid color-mix(in srgb,var(--hint) 25%,transparent);padding:6px 0;font-size:.85rem}
+.art .pc{width:36px;height:36px;object-fit:contain;flex:none;border-radius:8px;background:color-mix(in srgb,var(--hint) 15%,transparent)}
+.art .bd{min-width:0}
 .art b{font-size:.9rem}
 .err{color:#e5484d}
 </style>
@@ -60,9 +62,10 @@ function head() {
 }
 const stars = (n) => (n ? n + "★" : "");
 
+const pieceImg = (u) => (u ? `<img class="pc" src="${esc(u)}" alt="" width="36" height="36" loading="lazy" onerror="this.style.display='none'">` : "");
 function artifact(a) {
-  return `<div class="art"><b>${esc(a.slot)}</b> · ${esc(a.set)} · +${a.level} ${stars(a.rarity)}<br>` +
-    (a.main ? `<b>${esc(a.main.label)}: ${esc(a.main.value)}</b><br>` : "") + `<span class="m">${a.subs.map((s) => esc(s.label) + " " + esc(s.value)).join(" · ")}</span></div>`;
+  return `<div class="art">${pieceImg(a.icon)}<div class="bd"><b>${esc(a.slot)}</b> · ${esc(a.set)} · +${a.level} ${stars(a.rarity)}<br>` +
+    (a.main ? `<b>${esc(a.main.label)}: ${esc(a.main.value)}</b><br>` : "") + `<span class="m">${a.subs.map((s) => esc(s.label) + " " + esc(s.value)).join(" · ")}</span></div></div>`;
 }
 function genshinChar(c) {
   const s = c.stats, w = c.weapon;
@@ -79,9 +82,9 @@ function hsrChar(c) {
     (lc ? `<div class="card row2" style="margin:8px 0">${lc.icon ? `<img class="wi big" src="${esc(lc.icon)}" alt="" width="52" height="52" loading="lazy" onerror="this.style.display='none'">` : ""}<div><b>${esc(lc.name)}</b> ${stars(lc.rarity)}<br><span class="m">Nv. ${lc.level} · S${lc.superimpose} · HP ${lc.hp} · ATQ ${lc.atk} · DEF ${lc.def}</span></div></div>` : `<div class="m" style="margin:6px 0">Sem cone de luz equipado.</div>`) +
     `<div class="g">${c.stats.map((s) => `<div><span>${esc(s.label)}</span><b>${esc(s.value)}</b></div>`).join("")}</div>` +
     (c.sets && c.sets.length ? `<div class="m" style="margin:6px 0">Conjuntos: ${c.sets.map((s) => `${esc(s.name)} (${s.count}pç)`).join(" · ")}</div>` : "") +
-    (c.relics || []).map((r) => `<div class="art"><b>${esc(r.slot)}</b> · ${esc(r.set)} · +${r.level} ${stars(r.rarity)}<br>` +
+    (c.relics || []).map((r) => `<div class="art">${pieceImg(r.icon)}<div class="bd"><b>${esc(r.slot)}</b> · ${esc(r.set)} · +${r.level} ${stars(r.rarity)}<br>` +
       (r.main ? `<b>${esc(r.main.label)}: ${esc(r.main.value)}</b><br>` : "") +
-      `<span class="m">${r.subs.map((s) => esc(s.label) + " " + esc(s.value)).join(" · ")}</span></div>`).join("") + `</div>`;
+      `<span class="m">${r.subs.map((s) => esc(s.label) + " " + esc(s.value)).join(" · ")}</span></div></div>`).join("") + `</div>`;
 }
 function charCard(c, game) {
   const sub = [`Nv. ${c.level}`, game === "hsr" ? "E" + c.eidolon : "C" + c.constellation, stars(c.rarity), esc(c.element), esc(c.path)].filter(Boolean).join(" · ");
