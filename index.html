@@ -154,6 +154,19 @@
       </span>
     </a>
 
+    <a class="app" href="perfil/">
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+      </span>
+      <span>
+        <span class="name">Perfil</span>
+        <span class="desc" style="display:block">Vitrine de personagens por UID (Genshin e Star Rail)</span>
+      </span>
+      <span class="go" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      </span>
+    </a>
+
     <!-- Para adicionar outro app, copie um bloco <a class="app"> acima e troque href, nome e descrição. -->
 
   </nav>
@@ -178,6 +191,7 @@
 
   // Roteia o link do bot (t.me/gimpactbr_bot/hsr_calc?startapp=...) para a ferramenta certa:
   //   moc_160_1_vonwacq-2eagle  -> vel/    (formato do /vel; também pf_, aa_, as_)
+  //   perfil_genshin_618285856  -> perfil/ (jogos: genshin, hsr)
   //   hoje_eventos_hsr          -> hoje/   (abas: eventos, banners, codigos; jogos: genshin, hsr, zzz)
   //   acerto_80                 -> acerto/
   //   mat_<idPersonagem>_<idArma> -> materiais/
@@ -185,7 +199,9 @@
     const sp = tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param;
     if (!sp) return;
     const p = sp.split("_");
-    if (p[0] === "hoje") {
+    if (p[0] === "perfil") {
+      location.replace("perfil/?g=" + encodeURIComponent(p[1] || "") + "&u=" + encodeURIComponent(p[2] || ""));
+    } else if (p[0] === "hoje") {
       location.replace("hoje/?t=" + encodeURIComponent(p[1] || "") + "&g=" + encodeURIComponent(p[2] || ""));
     } else if (p[0] === "acerto") {
       location.replace("acerto/?c=" + encodeURIComponent(p[1] || ""));
