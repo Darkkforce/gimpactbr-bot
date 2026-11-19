@@ -69,7 +69,7 @@ function genshinChar(c) {
     `<div class="g">${g.map(([k, v]) => `<div><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join("")}</div>${c.artifacts.map(artifact).join("")}</div>`;
 }
 function charCard(c, game) {
-  const sub = `Nv. ${c.level} · ${game === "hsr" ? "E" + c.eidolon : "C" + c.constellation} · ${stars(c.rarity)} · ${esc(c.element)}${c.path ? " · " + esc(c.path) : ""}`;
+  const sub = [`Nv. ${c.level}`, game === "hsr" ? "E" + c.eidolon : "C" + c.constellation, stars(c.rarity), esc(c.element), esc(c.path)].filter(Boolean).join(" · ");
   const img = c.icon ? `<img src="${esc(c.icon)}" alt="" width="44" height="44" loading="lazy" onerror="this.style.visibility='hidden'">` : `<span style="width:44px"></span>`;
   return `<details class="ch"><summary>${img}<span><b>${esc(c.name)}</b><br><span class="m">${sub}</span></span></summary>${game === "genshin" ? genshinChar(c) : ""}</details>`;
 }
