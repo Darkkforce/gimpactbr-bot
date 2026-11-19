@@ -28,6 +28,10 @@ details.ch summary img{border-radius:50%;background:color-mix(in srgb,var(--hint
 .in{padding:2px 12px 12px}
 .g{display:grid;grid-template-columns:repeat(2,1fr);gap:4px 12px;margin:6px 0}
 .g div{display:flex;justify-content:space-between;gap:8px;font-size:.9rem}.g span{color:var(--hint)}
+.wi{width:40px;height:40px;object-fit:contain;flex:none;border-radius:8px;background:color-mix(in srgb,var(--hint) 15%,transparent)}
+.wi.big{width:52px;height:52px}
+.row2{display:flex;gap:10px;align-items:center}
+details.ch summary .txt{flex:1;min-width:0}
 .art{border-top:1px solid color-mix(in srgb,var(--hint) 25%,transparent);padding:6px 0;font-size:.85rem}
 .art b{font-size:.9rem}
 .err{color:#e5484d}
@@ -65,14 +69,14 @@ function genshinChar(c) {
   const g = [["Vida", s.hp], ["ATQ", s.atk], ["DEF", s.def], ["Prof. Elem.", s.em], ["Taxa Crít.", s.cr + "%"], ["Dano Crít.", s.cd + "%"], ["Recarga", s.er + "%"]];
   if (s.bonus) g.push([s.bonus.label, s.bonus.value]); if (s.heal) g.push(["Cura", s.heal]);
   return `<div class="in"><div class="m">Talentos: ${c.talents.map((t) => esc(t)).join(" / ") || "—"}${c.friendship ? " · Amizade " + c.friendship : ""}</div>` +
-    (w ? `<div class="card" style="margin:8px 0"><b>${esc(w.name)}</b> ${stars(w.rarity)}<br><span class="m">Nv. ${w.level} · R${w.refine}${w.atk ? " · ATQ base " + w.atk : ""}${w.sub ? " · " + esc(w.sub.label) + " " + esc(w.sub.value) : ""}</span></div>` : "") +
+    (w ? `<div class="card row2" style="margin:8px 0">${w.icon ? `<img class="wi big" src="${esc(w.icon)}" alt="" width="52" height="52" loading="lazy" onerror="this.style.display='none'">` : ""}<div><b>${esc(w.name)}</b> ${stars(w.rarity)}<br><span class="m">Nv. ${w.level} · R${w.refine}${w.atk ? " · ATQ base " + w.atk : ""}${w.sub ? " · " + esc(w.sub.label) + " " + esc(w.sub.value) : ""}</span></div></div>` : "") +
     `<div class="g">${g.map(([k, v]) => `<div><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join("")}</div>${c.artifacts.map(artifact).join("")}</div>`;
 }
 function hsrChar(c) {
   if (c.noDetail || !c.stats) return `<div class="in m">Detalhes deste personagem indisponíveis no momento.</div>`;
   const lc = c.lightCone;
   return `<div class="in">` +
-    (lc ? `<div class="card" style="margin:8px 0"><b>${esc(lc.name)}</b> ${stars(lc.rarity)}<br><span class="m">Nv. ${lc.level} · S${lc.superimpose} · HP ${lc.hp} · ATQ ${lc.atk} · DEF ${lc.def}</span></div>` : `<div class="m" style="margin:6px 0">Sem cone de luz equipado.</div>`) +
+    (lc ? `<div class="card row2" style="margin:8px 0">${lc.icon ? `<img class="wi big" src="${esc(lc.icon)}" alt="" width="52" height="52" loading="lazy" onerror="this.style.display='none'">` : ""}<div><b>${esc(lc.name)}</b> ${stars(lc.rarity)}<br><span class="m">Nv. ${lc.level} · S${lc.superimpose} · HP ${lc.hp} · ATQ ${lc.atk} · DEF ${lc.def}</span></div></div>` : `<div class="m" style="margin:6px 0">Sem cone de luz equipado.</div>`) +
     `<div class="g">${c.stats.map((s) => `<div><span>${esc(s.label)}</span><b>${esc(s.value)}</b></div>`).join("")}</div>` +
     (c.sets && c.sets.length ? `<div class="m" style="margin:6px 0">Conjuntos: ${c.sets.map((s) => `${esc(s.name)} (${s.count}pç)`).join(" · ")}</div>` : "") +
     (c.relics || []).map((r) => `<div class="art"><b>${esc(r.slot)}</b> · ${esc(r.set)} · +${r.level} ${stars(r.rarity)}<br>` +
@@ -82,7 +86,9 @@ function hsrChar(c) {
 function charCard(c, game) {
   const sub = [`Nv. ${c.level}`, game === "hsr" ? "E" + c.eidolon : "C" + c.constellation, stars(c.rarity), esc(c.element), esc(c.path)].filter(Boolean).join(" · ");
   const img = c.icon ? `<img src="${esc(c.icon)}" alt="" width="44" height="44" loading="lazy" onerror="this.style.visibility='hidden'">` : `<span style="width:44px"></span>`;
-  return `<details class="ch"><summary>${img}<span><b>${esc(c.name)}</b><br><span class="m">${sub}</span></span></summary>${game === "genshin" ? genshinChar(c) : hsrChar(c)}</details>`;
+  const eq = game === "genshin" ? c.weapon : c.lightCone;
+  const mini = eq && eq.icon ? `<img class="wi" src="${esc(eq.icon)}" alt="" title="${esc(eq.name)}" width="40" height="40" loading="lazy" onerror="this.style.visibility='hidden'">` : "";
+  return `<details class="ch"><summary>${img}<span class="txt"><b>${esc(c.name)}</b><br><span class="m">${sub}</span></span>${mini}</summary>${game === "genshin" ? genshinChar(c) : hsrChar(c)}</details>`;
 }
 function render(d) {
   const p = d.player;
