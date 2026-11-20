@@ -167,6 +167,19 @@
       </span>
     </a>
 
+    <a class="app" href="contadores/">
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+      </span>
+      <span>
+        <span class="name">Contadores</span>
+        <span class="desc" style="display:block">Metas de farm com saldo, gastos e histórico — o mesmo do bot</span>
+      </span>
+      <span class="go" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      </span>
+    </a>
+
     <!-- Para adicionar outro app, copie um bloco <a class="app"> acima e troque href, nome e descrição. -->
 
   </nav>
@@ -199,7 +212,9 @@
     const sp = tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param;
     if (!sp) return;
     const p = sp.split("_");
-    if (p[0] === "perfil") {
+    if (p[0] === "contadores") {
+      location.replace("contadores/");
+    } else if (p[0] === "perfil") {
       location.replace("perfil/?g=" + encodeURIComponent(p[1] || "") + "&u=" + encodeURIComponent(p[2] || ""));
     } else if (p[0] === "hoje") {
       location.replace("hoje/?t=" + encodeURIComponent(p[1] || "") + "&g=" + encodeURIComponent(p[2] || ""));
