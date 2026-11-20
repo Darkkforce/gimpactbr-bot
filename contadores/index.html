@@ -35,6 +35,8 @@ details{margin-top:8px}summary{cursor:pointer;color:var(--ac);font-weight:600;pa
 #msg div{padding:10px 12px;border-radius:10px;margin-bottom:8px;background:var(--ac);color:var(--act)}
 #msg div.e{background:#e5484d;color:#fff}
 .empty{color:var(--hint);padding:10px 0}
+.help{margin-top:16px;font-size:.82rem;color:var(--hint)}.help button{margin-top:6px}
+.dbg{font-size:.8rem;white-space:pre-wrap;word-break:break-word}
 </style>
 </head>
 <body>
@@ -52,7 +54,7 @@ const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const nf = (n) => Number(n).toLocaleString("pt-BR");
 const TIPO = { add: "Saldo atualizado", use: "Gasto", set: "Ajuste manual", "correcao-saldo": "Correção de saldo", "undo-gasto": "Gasto desfeito" };
-let D = null, SEL = null; const OPEN = new Set(); let busy = false;
+let D = null, SEL = null, DEBUG = false; const OPEN = new Set(); let busy = false;
 
 function toast(t, erro) {
   const d = document.createElement("div"); if (erro) d.className = "e"; d.textContent = t; $("msg").appendChild(d);
@@ -106,16 +108,23 @@ function render() {
     <div class="act" id="novo"><label>Nome</label><input name="name" maxlength="40" placeholder="ex.: Primogemas" aria-label="Nome do contador">
     <div class="g2"><div><label>Saldo inicial</label><input name="initial" inputmode="numeric" placeholder="0" aria-label="Saldo inicial"></div><div><label>Meta</label><input name="goal" inputmode="numeric" placeholder="3200" aria-label="Meta"></div></div>
     <div class="row"><button class="btn" data-op="new">Criar contador</button></div></div></details>` +
-    (ch.counters.length ? ch.counters.map(cardHtml).join("") : `<div class="empty">Nenhum contador neste chat ainda.</div>`);
+    (ch.counters.length ? ch.counters.map(cardHtml).join("") : `<div class="empty">Nenhum contador neste chat ainda.</div>`) +
+    `<div class="help">Não vê um grupo aqui? A lista mostra grupos onde você é membro e que já tenham contadores, ou onde o bot já viu você escrever. Crie um contador no grupo com <b>/contador nome inicial meta</b> (ou mande qualquer mensagem lá) e recarregue.
+      <div><button type="button" class="btn alt" id="dbgbtn">Ver diagnóstico</button></div>${D.debug ? dbgHtml(D.debug) : ""}</div>`;
+}
+function dbgHtml(d) {
+  const ex = d.excluidos.length ? d.excluidos.map((x) => `• ${esc(x.title)} (${x.chatId}) — ${x.contadores} contador(es)${x.visto ? ", bot já viu você" : ""}: ${esc(x.motivo)}`).join("\n") : "Nenhum grupo foi descartado.";
+  return `<div class="card dbg" style="margin-top:8px">Grupos em que o bot já viu você: ${d.gruposConhecidosDoUsuario}\nGrupos que têm contadores: ${d.gruposComContadores}\n\nDescartados:\n${ex}</div>`;
 }
 async function load() {
-  try { D = await call("/api/counters"); render(); }
+  try { D = await call("/api/counters" + (DEBUG ? "?debug=1" : "")); render(); }
   catch (e) { $("body").innerHTML = `<div class="card" style="color:#e5484d">${esc(e.message)}<div class="row"><button class="btn" id="rt">Tentar de novo</button></div></div>`; $("rt").onclick = load; }
 }
 function confirmar(t) { return new Promise((res) => (tg && tg.showConfirm ? tg.showConfirm(t, res) : res(window.confirm(t)))); }
 
 document.addEventListener("toggle", (e) => { const id = e.target.dataset && e.target.dataset.did; if (id) { e.target.open ? OPEN.add(id) : OPEN.delete(id); } }, true);
 document.addEventListener("click", async (e) => {
+  if (e.target.closest("#dbgbtn")) { DEBUG = true; await load(); return; }
   const ch = e.target.closest("[data-chat]");
   if (ch) { SEL = Number(ch.dataset.chat); render(); return; }
   const b = e.target.closest("[data-op]"); if (!b || busy) return;
