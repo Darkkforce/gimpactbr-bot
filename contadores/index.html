@@ -113,9 +113,9 @@ function render() {
       <div><button type="button" class="btn alt" id="dbgbtn">Ver diagnóstico</button></div>${D.debug ? dbgHtml(D.debug) : ""}</div>`;
 }
 function dbgHtml(d) {
-  const ex = d.excluidos.length ? d.excluidos.map((x) => `• ${esc(x.title)} (${x.chatId})${x.contadores != null ? " — " + x.contadores + " contador(es)" : ""}${x.visto ? ", bot já viu você" : ""}: ${esc(x.motivo)}`).join("\n") : "Nenhum grupo foi descartado.";
+  const ex = d.excluidos.length ? d.excluidos.map((x) => `• ${esc(x.title)} (${x.chatId})${x.itens != null ? " — " + x.itens + " contador(es)" : ""}${x.visto ? ", bot já viu você" : ""}: ${esc(x.motivo)}`).join("\n") : "Nenhum grupo foi descartado.";
   return `<div class="card dbg" style="margin-top:8px">Grupos em que o bot já viu você: ${d.gruposConhecidosDoUsuario}\n` +
-    (d.gruposComContadores != null ? `Grupos que têm contadores (visível só a superusers): ${d.gruposComContadores}\n` : "") +
+    (d.gruposComItens != null ? `Grupos que têm contadores (visível só a superusers): ${d.gruposComItens}\n` : "") +
     `\nDescartados (ou aceitos por regra alternativa):\n${ex}` +
     (d.ocultos ? `\n\n+ ${d.ocultos} grupo(s) com contadores onde você não é membro (nome e dados ocultos por privacidade).` : "") + `</div>`;
 }
