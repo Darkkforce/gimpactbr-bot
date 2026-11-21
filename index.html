@@ -193,6 +193,19 @@
       </span>
     </a>
 
+    <a class="app" href="hoyolab/">
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      </span>
+      <span>
+        <span class="name">HoYoLAB</span>
+        <span class="desc" style="display:block">Perfil e notas em tempo real (resina, estamina…) — só você vê</span>
+      </span>
+      <span class="go" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      </span>
+    </a>
+
     <!-- Para adicionar outro app, copie um bloco <a class="app"> acima e troque href, nome e descrição. -->
 
   </nav>
@@ -225,7 +238,9 @@
     const sp = tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param;
     if (!sp) return;
     const p = sp.split("_");
-    if (p[0] === "timers") {
+    if (p[0] === "hoyolab") {
+      location.replace("hoyolab/");
+    } else if (p[0] === "timers") {
       location.replace("timers/");
     } else if (p[0] === "contadores") {
       location.replace("contadores/");
