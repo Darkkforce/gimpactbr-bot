@@ -24,12 +24,20 @@ button:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
 .err{color:#e5484d}
 .m{color:var(--hint);font-size:.82rem}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.seg{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.seg button{padding:8px 12px;border:0;border-radius:10px;background:var(--sf);color:var(--tx);font:inherit;cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.seg button[aria-pressed=true]{background:var(--ac);color:var(--act);font-weight:600}
+.sep{border-top:1px solid color-mix(in srgb,var(--hint) 25%,transparent);margin:10px 0}
+.nav{display:flex;gap:8px;align-items:center;justify-content:space-between;margin:8px 0}
+.nav .btn{padding:7px 12px}
 </style>
 </head>
 <body>
 <main>
 <h1>HoYoLAB</h1>
 <p class="sub">🔒 Dados da sua conta: só você vê esta tela. Os cookies ficam guardados no servidor do bot e nunca chegam aqui.</p>
+<div class="seg" id="tabs" role="group" aria-label="Seção"></div>
+<div class="seg" id="contas" role="group" aria-label="Conta"></div>
 <div class="row"><button class="btn" id="ref">Atualizar</button><span class="m" id="info"></span></div>
 <div id="out"><div class="m">Carregando…</div></div>
 </main>
@@ -39,11 +47,13 @@ if (tg) { tg.ready(); tg.expand(); }
 const API = "https://bot-vnic.tailbd6ffe.ts.net";      // endereço fixo da API do bot (Tailscale Funnel)
 const $ = (id) => document.getElementById(id);
 const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };   // sempre textContent: nada de innerHTML com dado do servidor
+const TABS = { perfil: "Perfil", diario: "Diário", endgame: "Endgame" };
+const S = { tab: "perfil", conta: null, contas: [], mes: null, modo: 0, ciclo: 0, andar: null, dados: {} };   // dados[tab+conta+mes] = última resposta
 let busy = false;
 
 function renderLinha(segs) {
   const d = el("div", "ln");
-  if (!segs.length) { d.innerHTML = "&nbsp;"; return d; }   // (conteúdo fixo, não vem do servidor)
+  if (!segs.length) { d.appendChild(document.createTextNode("\u00a0")); return d; }
   for (const s of segs) {
     let n = document.createTextNode(s.t);
     if (s.c) { const c = el("code"); c.appendChild(n); n = c; }
@@ -53,43 +63,103 @@ function renderLinha(segs) {
   }
   return d;
 }
-function mensagem(txt, cls, extra) { const c = el("div", "card " + (cls || ""), txt); if (extra) c.appendChild(extra); const o = $("out"); o.replaceChildren(c); }
-function render(d) {
-  const o = $("out"); o.replaceChildren();
-  if (d.semConta) {
-    const b = el("button", "btn alt", "Abrir o bot"); b.style.marginTop = "10px";
-    b.onclick = () => { const u = "https://t.me/gimpactbr_bot"; tg && tg.openTelegramLink ? tg.openTelegramLink(u) : window.open(u); };
-    return mensagem("Você ainda não vinculou uma conta HoYoLAB. Por segurança isso é feito só no privado com o bot, com o comando /vincular (não por esta tela).", "", b);
-  }
-  if (d.semJogoAtivo || !d.accounts.length) return mensagem("Nenhum jogo ativado para mostrar. Use /jogosativos no bot para ligar Genshin, Star Rail ou ZZZ.");
-  for (const a of d.accounts) {
-    const c = el("div", "card"); c.appendChild(el("h2", "", a.label));
-    a.lines.forEach((l) => c.appendChild(renderLinha(l)));
-    if (a.authError) c.appendChild(el("div", "warn", "⚠️ O cookie desta conta pode ter expirado. Use /vincular de novo no privado com o bot para atualizar."));
-    o.appendChild(c);
-  }
+const linhasEm = (box, lines) => lines.forEach((l) => box.appendChild(renderLinha(l)));
+function mensagem(txt, cls, extra) { const c = el("div", "card " + (cls || ""), txt); if (extra) c.appendChild(extra); $("out").replaceChildren(c); }
+function botoes(box, itens, ativo, onClick) {
+  box.replaceChildren();
+  itens.forEach(([chave, rotulo]) => { const b = el("button", "", rotulo); b.type = "button"; b.setAttribute("aria-pressed", String(chave === ativo)); b.onclick = () => onClick(chave); box.appendChild(b); });
 }
-async function load() {
+function cabecalho() {
+  botoes($("tabs"), Object.entries(TABS), S.tab, (t) => { S.tab = t; S.modo = 0; S.ciclo = 0; S.andar = null; carregar(false); });
+  const multi = S.tab !== "perfil" && S.contas.length > 1;
+  $("contas").style.display = multi ? "" : "none";
+  if (multi) botoes($("contas"), S.contas.map((c) => [c.idx, c.label]), S.conta, (i) => { S.conta = i; S.modo = 0; S.ciclo = 0; S.andar = null; carregar(false); });
+}
+const abrirBot = () => { const u = "https://t.me/gimpactbr_bot"; tg && tg.openTelegramLink ? tg.openTelegramLink(u) : window.open(u); };
+function avisoAuth(box) { box.appendChild(el("div", "warn", "⚠️ O cookie desta conta pode ter expirado. Use /vincular de novo no privado com o bot para atualizar.")); }
+
+function viewPerfil(d) {
+  const o = $("out"); o.replaceChildren();
+  for (const a of d.accounts) { const c = el("div", "card"); c.appendChild(el("h2", "", a.label)); linhasEm(c, a.lines); if (a.authError) avisoAuth(c); o.appendChild(c); }
+}
+function viewDiario(d) {
+  const o = $("out"); o.replaceChildren();
+  const meses = el("div", "seg"); botoes(meses, d.meses.map((m) => [m.mes, m.label]), d.mes, (m) => { S.mes = m; carregar(false); }); o.appendChild(meses);
+  if (d.semJogo) return o.appendChild(el("div", "card m", "Esta conta não tem Genshin nem ZZZ ativados (o diário do Star Rail está fora do ar na HoYoverse). Veja /jogosativos no bot."));
+  d.blocks.forEach((b) => { const c = el("div", "card"); linhasEm(c, b); o.appendChild(c); });
+  if (d.authError) { const c = el("div", "card"); avisoAuth(c); o.appendChild(c); }
+}
+function viewEndgame(d) {
+  const o = $("out"); o.replaceChildren();
+  if (d.semJogo || !d.pages.length) return o.appendChild(el("div", "card m", "Esta conta não tem Genshin nem Star Rail ativados. Veja /jogosativos no bot."));
+  S.modo = Math.min(S.modo, d.pages.length - 1);
+  const page = d.pages[S.modo], jogos = [...new Set(d.pages.map((p) => p.game))];
+  for (const jogo of jogos) {                                   // uma linha de botões por jogo, como no bot
+    const linha = el("div", "seg"); const itens = []; d.pages.forEach((p, i) => { if (p.game === jogo) itens.push([i, p.label]); });
+    botoes(linha, itens, S.modo, (i) => { S.modo = i; S.ciclo = 0; S.andar = null; viewEndgame(d); }); o.appendChild(linha);
+  }
+  S.ciclo = Math.min(S.ciclo, page.cycles.length - 1);
+  if (page.cycles.length > 1) { const c = el("div", "seg"); botoes(c, page.cycles.map((x, i) => [i, x.name]), S.ciclo, (i) => { S.ciclo = i; S.andar = null; viewEndgame(d); }); o.appendChild(c); }
+  const ciclo = page.cycles[S.ciclo], card = el("div", "card");
+  if (ciclo.items) {
+    linhasEm(card, ciclo.header || []);
+    if (ciclo.items.length) {
+      const pos = S.andar != null ? Math.min(S.andar, ciclo.items.length - 1) : ciclo.items.length - 1;   // padrão: o último (mais alto/recente)
+      if (ciclo.items.length > 1) {
+        const nav = el("div", "nav"), ant = el("button", "btn alt", "◀ " + ciclo.rotulo + " " + (pos > 0 ? ciclo.items[pos - 1].index : "")), cur = el("span", "m", ciclo.rotulo + " " + ciclo.items[pos].index), prox = el("button", "btn alt", (pos < ciclo.items.length - 1 ? ciclo.rotulo + " " + ciclo.items[pos + 1].index : "") + " ▶");
+        ant.disabled = pos <= 0; prox.disabled = pos >= ciclo.items.length - 1;
+        ant.onclick = () => { S.andar = pos - 1; viewEndgame(d); }; prox.onclick = () => { S.andar = pos + 1; viewEndgame(d); };
+        nav.append(ant, cur, prox); card.appendChild(nav);
+      }
+      card.appendChild(el("div", "sep")); linhasEm(card, ciclo.items[pos].lines);
+    }
+  } else linhasEm(card, ciclo.lines);
+  o.appendChild(card);
+  if (d.authError) { const c = el("div", "card"); avisoAuth(c); o.appendChild(c); }
+}
+
+async function chamar(path) {
+  const r = await fetch(API + path, { headers: { Authorization: "tma " + tg.initData } });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) { if (r.status === 401) throw new Error("Sessão expirada. Feche e abra a miniapp de novo pelo Telegram."); throw new Error(d.error || "Erro " + r.status); }
+  return d;
+}
+async function carregar(forcar) {
+  cabecalho();
   if (busy) return;
   if (!tg || !tg.initData) return mensagem("Abra esta miniapp pelo Telegram (pelo bot), não pelo navegador.", "err");
-  busy = true; $("ref").disabled = true;
+  const qs = new URLSearchParams();
+  if (S.tab !== "perfil" && S.conta) qs.set("conta", S.conta);
+  if (S.tab === "diario" && S.mes) qs.set("mes", S.mes);
+  if (forcar && S.tab !== "perfil") qs.set("refresh", "1");
+  busy = true; $("ref").disabled = true; $("info").textContent = S.tab === "endgame" ? "Buscando… pode levar até 30 s." : "";
+  const tab = S.tab;
   try {
-    const r = await fetch(API + "/api/hoyolab/perfil", { headers: { Authorization: "tma " + tg.initData } });
-    const d = await r.json().catch(() => ({}));
-    if (!r.ok) {
-      if (r.status === 401) throw new Error("Sessão expirada. Feche e abra a miniapp de novo pelo Telegram.");
-      throw new Error(d.error || "Erro " + r.status);
+    const d = await chamar(`/api/hoyolab/${tab}${qs.toString() ? "?" + qs : ""}`);
+    if (tab !== S.tab) return;                                   // trocou de aba enquanto carregava
+    if (tab === "perfil") {
+      if (d.semConta) { const b = el("button", "btn alt", "Abrir o bot"); b.style.marginTop = "10px"; b.onclick = abrirBot; return mensagem("Você ainda não vinculou uma conta HoYoLAB. Por segurança isso é feito só no privado com o bot, com o comando /vincular (não por esta tela).", "", b); }
+      S.contas = d.accounts.map((a) => ({ idx: a.idx, label: a.label }));
+      if (!S.conta && S.contas.length) S.conta = S.contas[0].idx;
+      if (!d.accounts.length) return mensagem("Nenhum jogo ativado para mostrar. Use /jogosativos no bot para ligar Genshin, Star Rail ou ZZZ.");
+      viewPerfil(d);
+    } else {
+      S.contas = d.contas; S.conta = d.conta.idx;
+      if (tab === "diario") { S.mes = d.mes; viewDiario(d); } else viewEndgame(d);
     }
-    render(d);
+    cabecalho();
     $("info").textContent = d.cachedSecondsAgo > 2 ? `Atualizado há ${d.cachedSecondsAgo}s` : "Atualizado agora";
   } catch (e) {
-    const falhaRede = e instanceof TypeError;
-    if ($("out").children.length <= 1 && !$("out").querySelector(".ln")) mensagem(falhaRede ? "Não consegui falar com o servidor do bot. Tente de novo em instantes." : e.message, "err");
-    else $("info").textContent = falhaRede ? "Sem conexão com o bot." : e.message;
-  } finally { busy = false; $("ref").disabled = false; }
+    const falhaRede = e instanceof TypeError, txt = falhaRede ? "Não consegui falar com o servidor do bot. Tente de novo em instantes." : e.message;
+    if (!$("out").querySelector(".ln")) mensagem(txt, "err"); else $("info").textContent = txt;
+  } finally { busy = false; $("ref").disabled = false; if (tab !== S.tab) carregar(false); }   // trocou de aba durante a busca: carrega a aba atual
 }
-$("ref").addEventListener("click", load);
-load();
+$("ref").addEventListener("click", () => carregar(true));
+(function init() {
+  const q = new URLSearchParams(location.search);               // ?t=perfil|diario|endgame
+  if (TABS[q.get("t")]) S.tab = q.get("t");
+  carregar(false);
+})();
 </script>
 <script src="../extras.js"></script>
 </body>
