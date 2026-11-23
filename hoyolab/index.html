@@ -32,6 +32,10 @@ button:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
 .nav .btn{padding:7px 12px}
 textarea{width:100%;padding:10px 12px;border:0;border-radius:10px;background:var(--bg);color:var(--tx);font:inherit;font-family:ui-monospace,Menlo,Consolas,monospace;text-transform:uppercase;resize:vertical}
 textarea:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.cod{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:8px 0;border-top:1px solid color-mix(in srgb,var(--hint) 25%,transparent)}
+.cod .lt{min-width:0}.cod code{cursor:pointer;font-weight:700;font-size:1rem;word-break:break-all}
+.cod .bt{display:flex;gap:6px;flex:none}.mini{padding:5px 10px;font-size:.85rem}
+.lnk{color:var(--ac);text-decoration:none;font-size:.9rem}
 </style>
 </head>
 <body>
@@ -49,7 +53,7 @@ if (tg) { tg.ready(); tg.expand(); }
 const API = "https://bot-vnic.tailbd6ffe.ts.net";      // endereço fixo da API do bot (Tailscale Funnel)
 const $ = (id) => document.getElementById(id);
 const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };   // sempre textContent: nada de innerHTML com dado do servidor
-const TABS = { perfil: "Perfil", diario: "Diário", endgame: "Endgame", resgatar: "Resgatar" };
+const TABS = { perfil: "Perfil", diario: "Diário", endgame: "Endgame", resgatar: "Códigos" };
 const S = { tab: "perfil", conta: null, contas: [], mes: null, modo: 0, ciclo: 0, andar: null, dados: {} };   // dados[tab+conta+mes] = última resposta
 let busy = false;
 
@@ -162,7 +166,7 @@ async function carregar(forcar) {
 const JOGO_NOME = { genshin: "Genshin Impact", hsr: "Honkai: Star Rail", zzz: "Zenless Zone Zero" };
 const ICONE = { used: "✅", not_used: "⛔", unconfirmed: "❔" };
 const CODIGO_RE = /^[A-Z0-9]{4,32}$/;
-const R = { form: { codes: "", games: new Set() }, jogos: [], semCookies: false, job: null };
+const R = { form: { codes: "", games: new Set() }, jogos: [], semCookies: false, job: null, codigos: null };
 let POLL = null;
 function pararPoll() { if (POLL) { clearInterval(POLL); POLL = null; } }
 function lerCodigos(txt) {
@@ -170,21 +174,66 @@ function lerCodigos(txt) {
   for (const c of String(txt).split(/[\s,;]+/)) { const cod = c.trim().toUpperCase(); if (!cod) continue; if (!CODIGO_RE.test(cod)) throw new Error(`Código inválido: "${cod.slice(0, 20)}". Use só letras e números (de 4 a 32 caracteres).`); if (!out.includes(cod)) out.push(cod); }
   return out;
 }
+async function copiar(txt, btn) {
+  const ok = () => { if (!btn) return; const t = btn.textContent; btn.textContent = "Copiado ✓"; setTimeout(() => { btn.textContent = t; }, 1400); };
+  try { await navigator.clipboard.writeText(txt); ok(); }
+  catch (_) { const a = document.createElement("textarea"); a.value = txt; document.body.appendChild(a); a.select(); try { document.execCommand("copy"); ok(); } catch (__) { /* sem clipboard */ } a.remove(); }
+}
+// preenche o formulário de resgate com códigos da lista (sempre de UM jogo: tentar código no jogo errado só gera "inválido")
+function usarCodigos(jogo, codes) {
+  R.form.codes = codes.join("\n"); R.form.games = new Set([jogo]);
+  const ta = $("resgCodes"); if (!ta) return;
+  ta.value = R.form.codes;
+  document.querySelectorAll("#out [data-g]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.g === jogo)));
+  const m = $("resgMsg"); if (m) m.textContent = "Formulário preenchido: revise e toque em Resgatar.";
+  const btn = $("resgBtn"); if (btn) btn.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+function secaoCodigos(o) {
+  const cab = el("div", "row"); cab.appendChild(el("b", "", "Códigos ativos agora"));
+  const at = el("button", "btn alt mini", "Atualizar lista"); at.type = "button"; at.onclick = carregarResgate; cab.appendChild(at); o.appendChild(cab);
+  const cod = R.codigos;
+  if (!cod) { o.appendChild(el("div", "card m", "Não consegui buscar a lista de códigos agora. Tente atualizar em instantes.")); return; }
+  for (const g of cod.games) {
+    const card = el("div", "card"); card.appendChild(el("h2", "", `${g.emoji} ${g.label}`));
+    const pode = !R.semCookies && R.jogos.includes(g.key);
+    if (g.erro) card.appendChild(el("div", "m", "Erro ao buscar códigos. Tente atualizar em instantes."));
+    else if (!g.codes.length) card.appendChild(el("div", "m", "Nenhum código ativo no momento."));
+    for (const c of g.codes) {
+      const linha = el("div", "cod"), lt = el("div", "lt"), code = el("code", "", c.code); code.title = "Toque para copiar"; code.onclick = () => copiar(c.code, null);
+      lt.appendChild(code);
+      if (c.rewards) lt.appendChild(el("div", "m", c.rewards));
+      if (c.tentado) lt.appendChild(el("div", "m", "♻️ Já tentado nesta conta"));
+      const bt = el("div", "bt"), cp = el("button", "btn alt mini", "Copiar"); cp.type = "button"; cp.onclick = () => copiar(c.code, cp); bt.appendChild(cp);
+      if (pode) { const us = el("button", "btn mini", "Usar"); us.type = "button"; us.onclick = () => usarCodigos(g.key, [c.code]); bt.appendChild(us); }
+      linha.append(lt, bt); card.appendChild(linha);
+    }
+    const novos = g.codes.filter((c) => !c.tentado).map((c) => c.code);
+    if (pode && novos.length > 1) { const t = el("button", "btn alt mini", `Usar os ${Math.min(novos.length, 8)} não tentados`); t.type = "button"; t.style.marginTop = "8px"; t.onclick = () => usarCodigos(g.key, novos.slice(0, 8)); card.appendChild(t); }
+    if (/^https:\/\//.test(g.redeemUrl)) {
+      const a = el("a", "lnk", "🔗 Resgatar no site oficial ↗"); a.href = g.redeemUrl; a.target = "_blank"; a.rel = "noopener";
+      a.onclick = (e) => { if (tg && tg.openLink) { e.preventDefault(); tg.openLink(g.redeemUrl); } };
+      const w = el("div"); w.style.marginTop = "8px"; w.appendChild(a); card.appendChild(w);
+    }
+    o.appendChild(card);
+  }
+  o.appendChild(el("div", "m", "⚠️ Alguns códigos podem ser regionais e não funcionar em todas as contas."));
+}
 function formResgate() {
   const o = $("out"); o.replaceChildren();
+  secaoCodigos(o);
   const card = el("div", "card");
   if (R.semCookies) {
     card.appendChild(el("div", "warn", "Esta conta ainda não tem os cookies de resgate. Configure com /vincularresgate no privado com o bot (por segurança, isso não é feito por esta tela)."));
     o.appendChild(card); const r = el("div", "", ""); r.id = "resgRes"; o.appendChild(r); return;
   }
-  card.appendChild(el("h2", "", "Resgatar código(s)"));
+  card.appendChild(el("h2", "", "Resgatar código(s) — digite ou use os da lista"));
   const ta = el("textarea"); ta.id = "resgCodes"; ta.rows = 3; ta.maxLength = 400; ta.placeholder = "Digite os códigos: um por linha, ou separados por espaço ou vírgula"; ta.value = R.form.codes;
   ta.setAttribute("aria-label", "Códigos a resgatar"); ta.autocapitalize = "characters"; ta.spellcheck = false; ta.oninput = () => { R.form.codes = ta.value; };
   card.appendChild(ta);
   const jg = el("div", "seg"); jg.style.marginTop = "10px"; jg.appendChild(el("span", "m", "Jogo(s):"));
   if (R.jogos.length === 1) R.form.games = new Set(R.jogos);
   for (const g of R.jogos) {
-    const b = el("button", "", JOGO_NOME[g]); b.type = "button"; b.setAttribute("aria-pressed", String(R.form.games.has(g)));
+    const b = el("button", "", JOGO_NOME[g]); b.type = "button"; b.dataset.g = g; b.setAttribute("aria-pressed", String(R.form.games.has(g)));
     b.onclick = () => { R.form.games.has(g) ? R.form.games.delete(g) : R.form.games.add(g); b.setAttribute("aria-pressed", String(R.form.games.has(g))); };
     jg.appendChild(b);
   }
@@ -231,7 +280,9 @@ function iniciarPoll(id) {
 async function carregarResgate() {
   pararPoll(); $("info").textContent = "";
   try {
-    const d = await chamar("/api/hoyolab/resgatar/atual" + (S.conta ? "?conta=" + S.conta : ""));
+    const qs = S.conta ? "?conta=" + S.conta : "";
+    const [d, cod] = await Promise.all([chamar("/api/hoyolab/resgatar/atual" + qs), chamar("/api/hoyolab/codigos" + qs).catch(() => null)]);
+    R.codigos = cod;
     S.contas = d.contas; S.conta = d.conta.idx; R.jogos = d.jogos; R.semCookies = d.semCookiesResgate;
     R.form.games = new Set([...R.form.games].filter((g) => R.jogos.includes(g)));
     cabecalho(); formResgate(); mostrarJob(d.job);
