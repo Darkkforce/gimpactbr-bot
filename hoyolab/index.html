@@ -30,6 +30,8 @@ button:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
 .sep{border-top:1px solid color-mix(in srgb,var(--hint) 25%,transparent);margin:10px 0}
 .nav{display:flex;gap:8px;align-items:center;justify-content:space-between;margin:8px 0}
 .nav .btn{padding:7px 12px}
+textarea{width:100%;padding:10px 12px;border:0;border-radius:10px;background:var(--bg);color:var(--tx);font:inherit;font-family:ui-monospace,Menlo,Consolas,monospace;text-transform:uppercase;resize:vertical}
+textarea:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
 </style>
 </head>
 <body>
@@ -156,45 +158,73 @@ async function carregar(forcar) {
     if (!$("out").querySelector(".ln")) mensagem(txt, "err"); else $("info").textContent = txt;
   } finally { busy = false; $("ref").disabled = false; if (tab !== S.tab) carregar(false); }   // trocou de aba durante a busca: carrega a aba atual
 }
-// ---------- RESGATAR ----------
+// ---------- RESGATAR (códigos digitados à mão) ----------
 const JOGO_NOME = { genshin: "Genshin Impact", hsr: "Honkai: Star Rail", zzz: "Zenless Zone Zero" };
-const ICONE = { used: "✅", not_used: "⛔", unconfirmed: "❔", skipped: "♻️" };
+const ICONE = { used: "✅", not_used: "⛔", unconfirmed: "❔" };
+const CODIGO_RE = /^[A-Z0-9]{4,32}$/;
+const R = { form: { codes: "", games: new Set() }, jogos: [], semCookies: false, job: null };
 let POLL = null;
 function pararPoll() { if (POLL) { clearInterval(POLL); POLL = null; } }
-function viewResgate(job) {
+function lerCodigos(txt) {
+  const out = [];
+  for (const c of String(txt).split(/[\s,;]+/)) { const cod = c.trim().toUpperCase(); if (!cod) continue; if (!CODIGO_RE.test(cod)) throw new Error(`Código inválido: "${cod.slice(0, 20)}". Use só letras e números (de 4 a 32 caracteres).`); if (!out.includes(cod)) out.push(cod); }
+  return out;
+}
+function formResgate() {
   const o = $("out"); o.replaceChildren();
-  const rodando = !!job && job.state === "running";
-  const intro = el("div", "card");
-  intro.appendChild(el("div", "", "Tenta resgatar os códigos ativos na conta selecionada, um por vez (cerca de 6 s por código; pode levar até ~40 s)."));
-  intro.appendChild(el("div", "m", "Cada código resgatado é consumido e isso não pode ser desfeito. O resultado de cada um vem da resposta da própria HoYoverse."));
-  const b = el("button", "btn", rodando ? "Resgatando…" : "Resgatar códigos agora"); b.style.marginTop = "10px"; b.disabled = rodando; b.onclick = iniciarResgate;
-  intro.appendChild(b); o.appendChild(intro);
+  const card = el("div", "card");
+  if (R.semCookies) {
+    card.appendChild(el("div", "warn", "Esta conta ainda não tem os cookies de resgate. Configure com /vincularresgate no privado com o bot (por segurança, isso não é feito por esta tela)."));
+    o.appendChild(card); const r = el("div", "", ""); r.id = "resgRes"; o.appendChild(r); return;
+  }
+  card.appendChild(el("h2", "", "Resgatar código(s)"));
+  const ta = el("textarea"); ta.id = "resgCodes"; ta.rows = 3; ta.maxLength = 400; ta.placeholder = "Digite os códigos: um por linha, ou separados por espaço ou vírgula"; ta.value = R.form.codes;
+  ta.setAttribute("aria-label", "Códigos a resgatar"); ta.autocapitalize = "characters"; ta.spellcheck = false; ta.oninput = () => { R.form.codes = ta.value; };
+  card.appendChild(ta);
+  const jg = el("div", "seg"); jg.style.marginTop = "10px"; jg.appendChild(el("span", "m", "Jogo(s):"));
+  if (R.jogos.length === 1) R.form.games = new Set(R.jogos);
+  for (const g of R.jogos) {
+    const b = el("button", "", JOGO_NOME[g]); b.type = "button"; b.setAttribute("aria-pressed", String(R.form.games.has(g)));
+    b.onclick = () => { R.form.games.has(g) ? R.form.games.delete(g) : R.form.games.add(g); b.setAttribute("aria-pressed", String(R.form.games.has(g))); };
+    jg.appendChild(b);
+  }
+  card.appendChild(jg);
+  card.appendChild(el("div", "m", "Escolha o jogo certo: tentar um código no jogo errado só retorna “inválido”. Cada código resgatado é consumido e isso não pode ser desfeito. O resultado de cada um vem da resposta da própria HoYoverse."));
+  const b = el("button", "btn", "Resgatar"); b.id = "resgBtn"; b.style.marginTop = "10px"; b.onclick = iniciarResgate; card.appendChild(b);
+  const msg = el("div", "warn"); msg.id = "resgMsg"; card.appendChild(msg);
+  o.appendChild(card);
+  const r = el("div"); r.id = "resgRes"; o.appendChild(r);
+}
+function mostrarJob(job) {
+  R.job = job;
+  const rodando = !!job && job.state === "running", btn = $("resgBtn");
+  if (btn) { btn.disabled = rodando; btn.textContent = rodando ? "Resgatando…" : "Resgatar"; }
+  const box = $("resgRes"); if (!box) return; box.replaceChildren();
   if (!job) return;
   const r = job.resumo, sum = el("div", "card");
   sum.appendChild(el("h2", "", (rodando ? "Resgatando… " : job.state === "error" ? "Interrompido — " : "Concluído — ") + job.conta.label));
-  sum.appendChild(el("div", "", `✅ ${r.used} usado(s) · ⛔ ${r.not_used} não usado(s) · ❔ ${r.unconfirmed} não confirmado(s)` + (r.skipped ? ` · ♻️ ${r.skipped} já tentado(s) antes` : "")));
+  sum.appendChild(el("div", "", `✅ ${r.used} usado(s) · ⛔ ${r.not_used} não usado(s) · ❔ ${r.unconfirmed} não confirmado(s)`));
   if (job.erro) sum.appendChild(el("div", "warn", job.erro));
   if (r.unconfirmed) sum.appendChild(el("div", "warn", "❔ Não confirmado = não deu para saber se foi usado. Confira o correio do jogo antes de tentar de novo."));
-  o.appendChild(sum);
+  box.appendChild(sum);
   for (const g of ["genshin", "hsr", "zzz"]) {
-    const itens = job.results.filter((x) => x.game === g && x.kind !== "skipped"), nota = job.games[g], pulados = job.results.filter((x) => x.game === g && x.kind === "skipped").length;
-    if (!itens.length && !nota && !pulados) continue;
+    const itens = job.results.filter((x) => x.game === g);
+    if (!itens.length && !(rodando && job.plano.games.includes(g))) continue;
     const c = el("div", "card"); c.appendChild(el("h2", "", JOGO_NOME[g]));
-    if (nota) c.appendChild(el("div", "m", nota));
     for (const x of itens) {
       const l = el("div", "ln"); l.appendChild(document.createTextNode(ICONE[x.kind] + " "));
       const code = el("code"); code.textContent = x.code; l.appendChild(code); l.appendChild(document.createTextNode(" — " + x.text)); c.appendChild(l);
     }
-    if (pulados) c.appendChild(el("div", "m", `♻️ ${pulados} código(s) já tentado(s) antes nesta conta (omitido(s)).`));
-    o.appendChild(c);
+    if (!itens.length) c.appendChild(el("div", "m", "Aguardando…"));
+    box.appendChild(c);
   }
-  if (rodando) o.appendChild(el("div", "m", "Atualizando a cada 2 segundos…"));
+  if (rodando) box.appendChild(el("div", "m", "Cerca de 6 s por código. Atualizando a cada 2 segundos…"));
 }
 function iniciarPoll(id) {
   pararPoll();
   POLL = setInterval(async () => {
     if (S.tab !== "resgatar") return pararPoll();
-    try { const d = await chamar("/api/hoyolab/resgatar/" + encodeURIComponent(id)); viewResgate(d.job); if (d.job.state !== "running") pararPoll(); }
+    try { const d = await chamar("/api/hoyolab/resgatar/" + encodeURIComponent(id)); mostrarJob(d.job); if (d.job.state !== "running") pararPoll(); }
     catch (e) { if (/não encontrado/.test(e.message)) pararPoll(); }      // falha de rede: tenta de novo no próximo ciclo
   }, 2000);
 }
@@ -202,17 +232,27 @@ async function carregarResgate() {
   pararPoll(); $("info").textContent = "";
   try {
     const d = await chamar("/api/hoyolab/resgatar/atual" + (S.conta ? "?conta=" + S.conta : ""));
-    S.contas = d.contas; S.conta = d.conta.idx; cabecalho(); viewResgate(d.job);
+    S.contas = d.contas; S.conta = d.conta.idx; R.jogos = d.jogos; R.semCookies = d.semCookiesResgate;
+    R.form.games = new Set([...R.form.games].filter((g) => R.jogos.includes(g)));
+    cabecalho(); formResgate(); mostrarJob(d.job);
     if (d.job && d.job.state === "running") iniciarPoll(d.job.id);       // reabriu a miniapp com um resgate em andamento: retoma
   } catch (e) { mensagem(e instanceof TypeError ? "Não consegui falar com o servidor do bot. Tente de novo em instantes." : e.message, "err"); }
 }
 async function iniciarResgate() {
-  const ok = await new Promise((res) => (tg && tg.showConfirm ? tg.showConfirm("Tentar resgatar todos os códigos ativos nesta conta? Cada código resgatado é consumido e isso não pode ser desfeito.", res) : res(window.confirm("Tentar resgatar todos os códigos ativos nesta conta? Cada código resgatado é consumido e isso não pode ser desfeito."))));
+  const aviso = (t) => { const m = $("resgMsg"); if (m) m.textContent = t; };
+  aviso("");
+  let codes; try { codes = lerCodigos($("resgCodes").value); } catch (e) { return aviso(e.message); }
+  if (!codes.length) return aviso("Digite pelo menos um código.");
+  const games = [...R.form.games];
+  if (!games.length) return aviso("Escolha o jogo (ou os jogos) em que quer resgatar.");
+  const txt = `Resgatar ${codes.length} código(s) em ${games.map((g) => JOGO_NOME[g]).join(" e ")}?\n\n${codes.join(", ")}\n\nCada código resgatado é consumido e isso não pode ser desfeito.`;
+  const ok = await new Promise((res) => (tg && tg.showConfirm ? tg.showConfirm(txt, res) : res(window.confirm(txt))));
   if (!ok) return;
   try {
-    const d = await chamar("/api/hoyolab/resgatar", { conta: S.conta });
-    viewResgate(d.job); if (d.job.state === "running") iniciarPoll(d.job.id);
-  } catch (e) { $("info").textContent = e instanceof TypeError ? "Sem conexão com o bot." : e.message; const w = el("div", "warn", e instanceof TypeError ? "Sem conexão com o bot." : e.message); $("out").appendChild(w); }
+    const d = await chamar("/api/hoyolab/resgatar", { conta: S.conta, games, codes });
+    mostrarJob(d.job); if (d.job.state === "running") iniciarPoll(d.job.id);
+    if (d.retomado) aviso("Já havia um resgate seu em andamento; estou acompanhando esse.");
+  } catch (e) { aviso(e instanceof TypeError ? "Sem conexão com o bot." : e.message); }
 }
 $("ref").addEventListener("click", () => carregar(true));
 (function init() {
