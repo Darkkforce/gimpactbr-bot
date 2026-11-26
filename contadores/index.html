@@ -75,6 +75,18 @@ function num(v, nome) {
   if (!/^(\d+|\d{1,3}([.,]\d{3})+)$/.test(s)) throw new Error(nome + ": use só números (ex.: 1500 ou 1.500).");
   return Number(s.replace(/[.,]/g, ""));
 }
+const fdia = (iso) => { try { const d = new Date(iso); return isNaN(d) ? "—" : d.toLocaleDateString("pt-BR", { timeZone: (D && D.tz) || undefined }); } catch (_) { return "—"; } };
+const SEM_EST = { novo: "ainda sem dados (precisa de pelo menos 1 dia de uso)", "sem-progresso": "ainda sem progresso (nenhum farm registrado)", "sem-data": "indisponível (contador antigo, sem data de criação registrada)" };
+// estimativa de término: mesmos números e mesmas regras do bot (estimateCompletion); datas no fuso do servidor do bot
+function estHtml(e) {
+  if (!e) return "";
+  if (e.status === "concluido") return `<div class="m">🎉 Meta atingida!</div>`;
+  if (SEM_EST[e.status]) return `<div class="m">📅 Previsão de término: ${SEM_EST[e.status]}</div>`;
+  const rit = e.ritmoDia >= 10 ? nf(Math.round(e.ritmoDia)) : e.ritmoDia.toFixed(1).replace(".", ",");
+  const n = Math.max(1, Math.ceil(e.diasRestantes || 0));
+  const quando = e.status === "longe" ? "mais de 2 anos no ritmo atual" : `<b>${fdia(e.dataISO)}</b> (em ~${n} ${n === 1 ? "dia" : "dias"})`;
+  return `<div class="m">📅 Previsão de término: ${quando}</div><div class="m">💰 Saldo ao atingir a meta: <b>${nf(e.saldoPrevisto)}</b> (sem novos gastos) · ⚡ Ritmo médio <b>${rit}/dia</b> desde ${fdia(e.desdeISO)}</div>`;
+}
 const fd = (iso) => { try { return new Date(iso).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }); } catch (_) { return ""; } };
 
 function cardHtml(c) {
@@ -84,6 +96,7 @@ function cardHtml(c) {
   <div class="top"><b>${esc(c.name)}</b><span class="m">${nf(c.current)} / ${nf(c.goal)} (${c.percent}%)</span></div>
   <div class="bar"><i style="width:${c.percent}%"></i></div>
   <div class="m">Saldo atual <b>${nf(c.saldo)}</b> · Gasto <b>${nf(c.spent)}</b> · Faltando <b>${nf(c.faltando)}</b></div>
+  ${estHtml(c.estimativa)}
   <details data-did="${esc(c.id)}"${open}><summary>Ações</summary>
    <div class="act" data-op-group="add"><label>Atualizar saldo — quanto você tem agora (gastos são detectados sozinhos)</label>
      <div class="row"><input name="total" inputmode="numeric" placeholder="ex.: 1500" aria-label="Saldo atual"><button class="btn" data-op="add">Atualizar</button></div></div>
