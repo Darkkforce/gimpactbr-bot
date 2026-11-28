@@ -109,8 +109,22 @@ function cardHtml(c) {
      <div class="m" style="margin-top:4px">“Corrigir sem contar” só acerta o saldo, sem mudar o farmado nem o gasto (é o /corrigir do bot).</div></div>
    <div class="act"><label>Histórico recente</label>${hist}
      ${c.spentHistory.length ? `<label>Gastos (do mais recente)</label>${c.spentHistory.map((g) => `<div class="hist">${nf(g.amount)} <span class="m">· ${esc(g.note)} · ${esc(fd(g.date))}</span></div>`).join("")}` : ""}</div>
-   ${c.canDelete ? `<div class="act"><button class="btn del" data-op="delete">Remover contador</button></div>` : ""}
+   ${c.canDelete ? `<div class="act"><label>Finalizar contador</label><div class="m">Encerra sem apagar nada: sai da lista e libera o espaço (e o nome), e fica guardado em “Finalizados” com tudo o que tinha. Dá para reabrir depois.</div><div class="row"><button class="btn alt" data-op="finish">Finalizar</button></div></div>
+   <div class="act"><label>Remover contador</label><div class="m">Apaga o contador e todas as informações dele. Não dá para desfazer.</div><div class="row"><button class="btn del" data-op="delete">Remover contador</button></div></div>` : ""}
   </details></div>`;
+}
+function finHtml(ch) {
+  const L = ch.finished || [];
+  if (!L.length) return "";
+  const itens = L.map((f) => {
+    const res = f.metaAtingida ? `✅ Meta atingida (${nf(f.current)} de ${nf(f.goal)})` : `⏹ Encerrado em ${f.percent}% da meta (${nf(f.current)} de ${nf(f.goal)})`;
+    const periodo = f.dias ? `${fdia(f.createdAt)} → ${fdia(f.finishedAt)} (${f.dias} ${f.dias === 1 ? "dia" : "dias"})` : `finalizado em ${fdia(f.finishedAt)}`;
+    return `<div class="card" data-fid="${esc(f.id)}"><div class="top"><b>${esc(f.name)}</b></div><div class="m">${esc(res)}</div>
+      <div class="m">${esc(periodo)} · Gasto <b>${nf(f.spent)}</b> · Saldo final <b>${nf(f.saldo)}</b></div>` +
+      (f.canManage ? `<div class="row"><button class="btn alt" data-op="reopen">Reabrir</button><button class="btn del" data-op="deletefinished">Remover de vez</button></div>` : "") + `</div>`;
+  }).join("");
+  const mais = ch.finishedTotal > L.length ? `<div class="m">… e mais ${ch.finishedTotal - L.length}. A lista completa está em /contador finalizados no chat.</div>` : "";
+  return `<details data-did="__fin"${OPEN.has("__fin") ? " open" : ""}><summary>Finalizados (${ch.finishedTotal ?? L.length})</summary>${itens}${mais}</details>`;
 }
 function render() {
   if (!D) return;
@@ -121,7 +135,7 @@ function render() {
     <div class="act" id="novo"><label>Nome</label><input name="name" maxlength="40" placeholder="ex.: Primogemas" aria-label="Nome do contador">
     <div class="g2"><div><label>Saldo inicial</label><input name="initial" inputmode="numeric" placeholder="0" aria-label="Saldo inicial"></div><div><label>Meta</label><input name="goal" inputmode="numeric" placeholder="3200" aria-label="Meta"></div></div>
     <div class="row"><button class="btn" data-op="new">Criar contador</button></div></div></details>` +
-    (ch.counters.length ? ch.counters.map(cardHtml).join("") : `<div class="empty">Nenhum contador neste chat ainda.</div>`) +
+    (ch.counters.length ? ch.counters.map(cardHtml).join("") : `<div class="empty">Nenhum contador ativo neste chat.</div>`) + finHtml(ch) +
     `<div class="help">Não vê um grupo aqui? A lista mostra grupos onde você é membro e que já tenham contadores, ou onde o bot já viu você escrever. Crie um contador no grupo com <b>/contador nome inicial meta</b> (ou mande qualquer mensagem lá) e recarregue.
       <div><button type="button" class="btn alt" id="dbgbtn">Ver diagnóstico</button></div>${D.debug ? dbgHtml(D.debug) : ""}</div>`;
 }
@@ -144,9 +158,9 @@ document.addEventListener("click", async (e) => {
   const ch = e.target.closest("[data-chat]");
   if (ch) { SEL = Number(ch.dataset.chat); render(); return; }
   const b = e.target.closest("[data-op]"); if (!b || busy) return;
-  const op = b.dataset.op, scope = b.closest(".act"), card = b.closest("[data-cid]");
+  const op = b.dataset.op, scope = b.closest(".act"), card = b.closest("[data-cid],[data-fid]");
   const val = (n) => (scope.querySelector(`[name=${n}]`) || {}).value;
-  const base = `/api/counters/${SEL}`, cid = card && card.dataset.cid;
+  const base = `/api/counters/${SEL}`, cid = card && (card.dataset.cid || card.dataset.fid);
   try {
     let path, body, ok;
     if (op === "new") { path = `${base}/new`; body = { name: (val("name") || "").trim(), initial: num(val("initial") || "0", "Saldo inicial"), goal: num(val("goal"), "Meta") }; ok = "Contador criado."; }
@@ -154,6 +168,9 @@ document.addEventListener("click", async (e) => {
     else if (op === "use") { path = `${base}/${cid}/use`; body = { amount: num(val("amount"), "Quantidade"), note: val("note") }; ok = "Gasto registrado."; }
     else if (op === "set" || op === "correct") { path = `${base}/${cid}/${op}`; body = { total: num(val("total"), "Novo saldo"), reason: val("reason") }; ok = op === "set" ? "Saldo ajustado." : "Saldo corrigido (sem contar)."; }
     else if (op === "undo") { path = `${base}/${cid}/undo`; body = {}; ok = "Último gasto desfeito."; }
+    else if (op === "finish") { if (!(await confirmar("Finalizar este contador? Ele sai da lista e libera o espaço, mas todas as informações ficam guardadas em Finalizados e dá para reabrir depois."))) return; path = `${base}/${cid}/finish`; body = {}; ok = "Contador finalizado: nada foi apagado e o espaço foi liberado."; }
+    else if (op === "reopen") { path = `${base}/${cid}/reopen`; body = {}; ok = "Contador reaberto com tudo o que tinha."; }
+    else if (op === "deletefinished") { if (!(await confirmar("Remover este contador finalizado de vez? Isso apaga todas as informações dele e não pode ser desfeito."))) return; path = `${base}/${cid}/deletefinished`; body = {}; ok = "Contador finalizado removido de vez."; }
     else if (op === "delete") { if (!(await confirmar("Remover este contador? Isso não pode ser desfeito."))) return; path = `${base}/${cid}/delete`; body = {}; ok = "Contador removido."; }
     busy = true; b.disabled = true;
     const r = await call(path, "POST", body);
